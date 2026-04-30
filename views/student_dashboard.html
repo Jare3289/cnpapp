@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+	<meta charset="UTF-8" />
+	<title>แผงควบคุมนักเรียน | CNP APP</title>
+	<meta content='width=device-width, initial-scale=1.0, shrink-to-fit=no' name='viewport' />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="../public/css/style.css">
+    <link rel="stylesheet" href="../public/css/notion.css">
+</head>
+<body>
+	<div class="wrapper">
+		<div class="sidebar" id="mainSidebar">			
+			<div class="logo-header d-flex align-items-center justify-content-between">
+				<a href="student_dashboard.html" class="navbar-brand fw-bold text-navy d-flex align-items-center">
+                    <img src="../public/img/logo.png" alt="Logo" class="me-2" style="height: 35px; width: auto; object-fit: contain;" onerror="this.style.display='none'">
+                    <span>CNP <span style="color: var(--pink-vibrant);">APP</span></span>
+                </a>
+                <button class="btn btn-link text-navy d-lg-none" onclick="toggleSidebar()"><i class="fas fa-times"></i></button>
+			</div>
+			<div class="sidebar-wrapper scrollbar-inner">
+				<div class="sidebar-content" id="mainSidebarContent">
+					<!-- Sidebar will be injected by main.js -->
+				</div>
+			</div>
+		</div>
+
+		<main class="app-main main-panel d-flex flex-column min-vh-100 d-flex flex-column min-vh-100" style="background-color: #f8fafc;" id="main" tabindex="-1">
+			<div class="app-content-header main-header sticky-top bg-white">
+				<div class="container-fluid d-flex align-items-center justify-content-between">
+					<div class="d-flex align-items-center gap-3">
+                        <button class="btn btn-link text-navy d-lg-none px-0" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                        <h5 class="mb-0 fw-bold text-navy d-none d-sm-block"><i class="fas fa-calendar-day me-2 opacity-50"></i> <span id="currentDate"></span></h5>
+                    </div>
+					<div class="d-flex align-items-center gap-4">
+                        <div class="user-info text-end">
+                            <p class="mb-0 fw-bold small text-navy" id="studentNameDisplay">Loading...</p>
+                            <p class="mb-0 x-small text-muted" style="font-size: 0.7rem;">STUDENT PORTAL</p>
+                        </div>
+					</div>
+				</div>
+			</div>
+
+			<div class="app-content page-content flex-grow-1 d-flex flex-column py-4 flex-grow-1 d-flex flex-column">
+				<div class="panel-header animated fadeIn" style="background: var(--navy-gradient) !important;">
+                    <div class="row align-items-center">
+                        <div class="col-md-10">
+                            <h1 class="text-white fw-bold mb-2">Student Dashboard</h1>
+                            <p class="text-white opacity-75 fs-5">โรงเรียนชัยนาทพิทยาคม | ข้อมูลการเรียนของคุณในที่เดียว</p>
+                        </div>
+                    </div>
+				</div>
+
+				<div class="page-inner mt-n5" style="margin-top: -60px;">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="card border-0 h-100 p-4 text-center clickable-card shadow-lg rounded-5 overflow-hidden" onclick="window.location.href='student_attendance_history.html'">
+                                <div class="card-body py-5 position-relative">
+                                    <div class="icon-circle-lg bg-info text-white mx-auto mb-4" style="width: 100px; height: 100px; border-radius: 35px; display: flex; align-items: center; justify-content: center; font-size: 3rem; background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%) !important;">
+                                        <i class="fas fa-calendar-check"></i>
+                                    </div>
+                                    <h2 class="fw-black text-navy mb-3">ประวัติการเช็คชื่อ</h2>
+                                    <p class="text-muted fs-5">ตรวจสอบข้อมูลการเข้าเรียน รายวัน รายเดือน และสถิติรวม</p>
+                                    <div class="mt-4"><span class="badge rounded-pill bg-info-subtle text-info px-4 py-2 fw-bold">VIEW HISTORY</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card border-0 h-100 p-4 text-center clickable-card shadow-lg rounded-5 overflow-hidden" onclick="window.location.href='student_credit_history.html'">
+                                <div class="card-body py-5 position-relative">
+                                    <div class="icon-circle-lg bg-pink-gradient text-white mx-auto mb-4" style="width: 100px; height: 100px; border-radius: 35px; display: flex; align-items: center; justify-content: center; font-size: 3rem;">
+                                        <i class="fas fa-award"></i>
+                                    </div>
+                                    <h2 class="fw-black text-navy mb-3">คะแนนพฤติกรรม</h2>
+                                    <p class="text-muted fs-5">ติดตามคะแนนพฤติกรรม และรายการหักแต้มสะสม</p>
+                                    <div class="mt-4"><span class="badge rounded-pill bg-pink-soft text-pink-vibrant px-4 py-2 fw-bold">VIEW CREDITS</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+				</div>
+			</div>
+		</div>
+	</div><script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../public/js/main.js"></script>
+    <script>
+        function toggleSidebar() { document.getElementById('mainSidebar').classList.toggle('active'); }
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = await checkAuth('student');
+            if(user) document.getElementById('studentNameDisplay').innerText = user.username;
+            document.getElementById('currentDate').innerText = new Date().toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' });
+        });
+    </script>
+    <style>
+        .fw-black { font-weight: 900; }
+        .clickable-card { cursor: pointer; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 2px solid transparent !important; }
+        .clickable-card:hover { transform: scale(1.05) translateY(-10px); border-color: var(--pink-vibrant) !important; }
+    </style>
+</body>
+</html>

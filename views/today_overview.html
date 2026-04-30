@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8" />
+    <title>ภาพรวมการบริหาร | CNP APP</title>
+    <meta content='width=device-width, initial-scale=1.0, shrink-to-fit=no' name='viewport' />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../public/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .kpi-card { border: none; border-radius: 24px; transition: 0.3s; overflow: hidden; }
+        .kpi-card:hover { transform: translateY(-5px); }
+        .kpi-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; }
+        
+        .chart-container { position: relative; height: 250px; width: 100%; }
+        
+        /* Tabs Styling */
+        .nav-pills-custom .nav-link { border-radius: 20px; padding: 10px 25px; font-weight: 600; color: #64748b; transition: 0.3s; }
+        .nav-pills-custom .nav-link.active { background: #1e3c72; color: white; box-shadow: 0 10px 20px rgba(30, 60, 114, 0.2); }
+        
+        /* Gender Table Styling */
+        .table-gender { border-collapse: separate; border-spacing: 0; font-size: 0.85rem; width: 100%; }
+        .table-gender th, .table-gender td { padding: 10px 8px !important; border: 1px solid #dee2e6 !important; text-align: center; vertical-align: middle; }
+        .h-total { background-color: #0d6efd !important; color: white !important; }
+        .h-present { background-color: #198754 !important; color: white !important; }
+        .h-absent { background-color: #dc3545 !important; color: white !important; }
+        .h-percent { background-color: #0dcaf0 !important; color: white !important; }
+        .h-status { background-color: #6c757d !important; color: white !important; }
+        .h-room { background-color: #212529 !important; color: white !important; }
+        .sh-total { background-color: rgba(13, 110, 253, 0.1) !important; color: #0d6efd !important; font-weight: bold; }
+        .sh-present { background-color: rgba(25, 135, 84, 0.1) !important; color: #198754 !important; font-weight: bold; }
+        .sh-absent { background-color: rgba(220, 53, 69, 0.1) !important; color: #dc3545 !important; font-weight: bold; }
+
+        /* Summary Big Cards */
+        .sum-card { border: none; border-radius: 20px; color: white; padding: 25px; margin-bottom: 20px; position: relative; overflow: hidden; }
+        .sc-total { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); }
+        .sc-present { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+        .sc-absent { background: linear-gradient(135deg, #cb2d3e 0%, #ef473a 100%); }
+        .sum-card .label { opacity: 0.8; font-size: 0.9rem; font-weight: 600; }
+        .sum-card .value { font-size: 2.2rem; font-weight: 800; }
+        .sum-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; border-top: 1px solid rgba(255,255,255,0.2); margin-top: 15px; padding-top: 15px; }
+        
+        .status-badge { font-size: 0.7rem; padding: 4px 8px; border-radius: 6px; font-weight: bold; }
+        .status-not { background-color: #dc3545; color: white; }
+        .status-done { background-color: #198754; color: white; }
+        
+        .progress-slim { height: 6px; border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="sidebar" id="mainSidebar"></div>
+
+        <main class="app-main main-panel d-flex flex-column min-vh-100" style="background-color: #f8fafc;" id="main">
+            <div class="app-content-header main-header sticky-top">
+                <div class="container-fluid d-flex align-items-center justify-content-between py-2">
+                    <div class="d-flex align-items-center gap-3">
+                        <button class="btn btn-link text-navy d-lg-none px-0" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0 small">
+                                <li class="breadcrumb-item"><a href="admin_dashboard.html">หน้าหลัก</a></li>
+                                <li class="breadcrumb-item active">ภาพรวมการเช็คชื่อ</li>
+                            </ol>
+                        </nav>
+                    </div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="d-flex align-items-center bg-white rounded-pill shadow-sm px-3 py-1">
+                            <i class="bi bi-calendar-event text-primary me-2"></i>
+                            <input type="date" id="overviewDate" class="form-control form-control-sm border-0 shadow-none p-0" onchange="loadExecutiveStats()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="app-content page-content content-padding py-4">
+                <div class="container-fluid">
+                    
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <div>
+                            <h3 class="fw-bold text-navy mb-1">Dashboard ภาพรวมการมาเรียน</h3>
+                            <p class="text-muted small mb-0">สรุปข้อมูลสถิติประจำวันที่ <span id="displayDateLabel" class="fw-bold"></span></p>
+                        </div>
+                        <ul class="nav nav-pills nav-pills-custom" id="dashboardTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="analysis-tab" data-bs-toggle="pill" data-bs-target="#analysis-content" type="button"><i class="bi bi-graph-up-arrow me-2"></i>วิเคราะห์เชิงบริหาร</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="room-tab" data-bs-toggle="pill" data-bs-target="#room-content" type="button"><i class="bi bi-grid-3x3-gap-fill me-2"></i>สรุปรายห้อง (ชาย/หญิง)</button>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="tab-content" id="dashboardTabContent">
+                        
+                        <!-- TAB 1: EXECUTIVE ANALYSIS -->
+                        <div class="tab-pane fade show active" id="analysis-content" role="tabpanel">
+                            <!-- KPI Row -->
+                            <div class="row g-3 mb-4">
+                                <div class="col-md-3">
+                                    <div class="card kpi-card shadow-sm p-4 h-100 bg-white">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="kpi-icon bg-primary bg-opacity-10 text-primary me-3"><i class="bi bi-check-all"></i></div>
+                                            <div class="small fw-bold text-muted">ความคืบหน้าการเช็คชื่อ</div>
+                                        </div>
+                                        <h2 class="fw-bold mb-1" id="kpiCompletion">0%</h2>
+                                        <p class="text-muted small mb-0"><span id="kpiCheckedRooms">0</span> จาก <span id="kpiTotalRooms">0</span> ห้องเรียน</p>
+                                        <div class="progress progress-slim mt-3"><div id="barCompletion" class="progress-bar" style="width: 0%"></div></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card kpi-card shadow-sm p-4 h-100 bg-white">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="kpi-icon bg-success bg-opacity-10 text-success me-3"><i class="bi bi-people-fill"></i></div>
+                                            <div class="small fw-bold text-muted">อัตราการมาเรียนเฉลี่ย</div>
+                                        </div>
+                                        <h2 class="fw-bold mb-1" id="kpiAttendance">0%</h2>
+                                        <p class="text-muted small mb-0">มาเรียนแล้ว <span id="kpiPresentCount">0</span> คน</p>
+                                        <div class="progress progress-slim mt-3"><div id="barAttendance" class="progress-bar bg-success" style="width: 0%"></div></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card kpi-card shadow-sm p-4 h-100 bg-white">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="kpi-icon bg-danger bg-opacity-10 text-danger me-3"><i class="bi bi-person-x-fill"></i></div>
+                                            <div class="small fw-bold text-muted">จำนวนนักเรียนที่ขาดเรียน</div>
+                                        </div>
+                                        <h2 class="fw-bold mb-1 text-danger" id="kpiAbsent">0</h2>
+                                        <p class="text-muted small mb-0">คิดเป็น <span id="kpiAbsentPercent">0</span>% ของที่เช็คแล้ว</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="card kpi-card shadow-sm p-4 h-100 bg-white">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <div class="kpi-icon bg-warning bg-opacity-10 text-warning me-3"><i class="bi bi-clock-history"></i></div>
+                                            <div class="small fw-bold text-muted">มาสาย/ลา/ป่วย</div>
+                                        </div>
+                                        <h2 class="fw-bold mb-1" id="kpiLateLeave">0</h2>
+                                        <p class="text-muted small mb-0">สาย <span id="kpiLate">0</span> | ลา <span id="kpiLeave">0</span></p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row g-4 mb-4">
+                                <div class="col-lg-4">
+                                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
+                                        <h6 class="fw-bold mb-4">สัดส่วนสถานะการมาเรียน</h6>
+                                        <div class="chart-container"><canvas id="statusChart"></canvas></div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-8">
+                                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
+                                        <h6 class="fw-bold mb-4">ช่วงเวลาการบันทึกข้อมูล (รายชั่วโมง)</h6>
+                                        <div class="chart-container"><canvas id="timelineChart"></canvas></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row g-4">
+                                <div class="col-lg-6">
+                                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
+                                        <h6 class="fw-bold mb-4">5 อันดับห้องเรียนที่ "ขาด" สูงสุด</h6>
+                                        <div class="table-responsive"><table class="table align-middle"><tbody id="criticalRoomsTable"></tbody></table></div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
+                                        <h6 class="fw-bold mb-4 text-danger">นักเรียนที่ขาดเรียน (ที่มีประวัติขาดสูง)</h6>
+                                        <div class="table-responsive"><table class="table align-middle"><tbody id="atRiskTable"></tbody></table></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB 2: ROOM GENDER SUMMARY -->
+                        <div class="tab-pane fade" id="room-content" role="tabpanel">
+                            <!-- Big Stats Grid -->
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="sum-card sc-total">
+                                        <div class="label"><i class="bi bi-people-fill me-2"></i>ทั้งหมด (คน)</div>
+                                        <div class="value" id="sumTotal">0</div>
+                                        <div class="sum-grid">
+                                            <div><small>ชาย</small><br><span id="sumTotalM">0</span></div>
+                                            <div><small>หญิง</small><br><span id="sumTotalF">0</span></div>
+                                            <div><small>รวม</small><br><span id="sumTotalR">0</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="sum-card sc-present">
+                                        <div class="label"><i class="bi bi-check-circle-fill me-2"></i>มาเรียน (คน)</div>
+                                        <div class="value" id="sumPresent">0</div>
+                                        <div class="sum-grid">
+                                            <div><small>ชาย</small><br><span id="sumPresentM">0</span></div>
+                                            <div><small>หญิง</small><br><span id="sumPresentF">0</span></div>
+                                            <div><small>รวม</small><br><span id="sumPresentR">0</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="sum-card sc-absent">
+                                        <div class="label"><i class="bi bi-x-circle-fill me-2"></i>ไม่มาเรียน (คน)</div>
+                                        <div class="value" id="sumAbsent">0</div>
+                                        <div class="sum-grid">
+                                            <div><small>ชาย</small><br><span id="sumAbsentM">0</span></div>
+                                            <div><small>หญิง</small><br><span id="sumAbsentF">0</span></div>
+                                            <div><small>รวม</small><br><span id="sumAbsentR">0</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card border-0 shadow-sm rounded-4 overflow-hidden mt-2">
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table-gender">
+                                            <thead>
+                                                <tr>
+                                                    <th rowspan="2" class="h-room">ห้องเรียน</th>
+                                                    <th colspan="3" class="h-total">ทั้งหมด (คน)</th>
+                                                    <th colspan="3" class="h-present">มาเรียน (คน)</th>
+                                                    <th colspan="3" class="h-absent">ไม่มา (คน)</th>
+                                                    <th rowspan="2" class="h-percent">ร้อยละการมาเรียน</th>
+                                                    <th rowspan="2" class="h-status" style="width: 120px;">สถานะการเช็คชื่อ</th>
+                                                </tr>
+                                                <tr>
+                                                    <th class="sh-total">ชาย</th><th class="sh-total">หญิง</th><th class="sh-total">รวม</th>
+                                                    <th class="sh-present">ชาย</th><th class="sh-present">หญิง</th><th class="sh-present">รวม</th>
+                                                    <th class="sh-absent">ชาย</th><th class="sh-absent">หญิง</th><th class="sh-absent">รวม</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="roomGenderTableBody"></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../public/js/main.js"></script>
+    <script>
+        let statusChart = null;
+        let timelineChart = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = await checkAuth('admin');
+            if (user) {
+                document.getElementById('overviewDate').valueAsDate = new Date();
+                loadExecutiveStats();
+            }
+        });
+
+        async function loadExecutiveStats() {
+            const date = $('#overviewDate').val();
+            const d = new Date(date);
+            $('#displayDateLabel').text(d.toLocaleDateString('th-TH', { day: 'numeric', month: 'long', year: 'numeric' }));
+
+            try {
+                const res = await fetch(`../api/admin/executive_overview.php?date=${date}`);
+                const data = await res.json();
+                if (data.success) {
+                    updateKPIs(data.kpis);
+                    renderCharts(data);
+                    renderTables(data);
+                    renderRoomGender(data);
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function updateKPIs(k) {
+            $('#kpiCompletion').text(k.completion_rate + '%');
+            $('#kpiCheckedRooms').text(k.checked_rooms);
+            $('#kpiTotalRooms').text(k.total_rooms);
+            $('#barCompletion').css('width', k.completion_rate + '%');
+
+            const s = k.attendance_summary;
+            const attRate = s.total_checked > 0 ? ((s.present / s.total_checked) * 100).toFixed(1) : 0;
+            $('#kpiAttendance').text(attRate + '%');
+            $('#kpiPresentCount').text(s.present);
+            $('#barAttendance').css('width', attRate + '%');
+
+            $('#kpiAbsent').text(s.absent);
+            $('#kpiAbsentPercent').text(s.total_checked > 0 ? ((s.absent / s.total_checked) * 100).toFixed(1) : 0);
+            $('#kpiLateLeave').text(s.late + s.leave);
+            $('#kpiLate').text(s.late); $('#kpiLeave').text(s.leave);
+        }
+
+        function renderCharts(data) {
+            const ctxStatus = document.getElementById('statusChart').getContext('2d');
+            if (statusChart) statusChart.destroy();
+            const s = data.kpis.attendance_summary;
+            statusChart = new Chart(ctxStatus, {
+                type: 'doughnut',
+                data: {
+                    labels: ['มา', 'ขาด', 'สาย', 'ลา/ป่วย'],
+                    datasets: [{
+                        data: [s.present, s.absent, s.late, s.leave],
+                        backgroundColor: ['#16a34a', '#dc2626', '#ca8a04', '#0891b2'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { maintainAspectRatio: false, cutout: '75%', plugins: { legend: { position: 'bottom' } } }
+            });
+
+            const ctxTime = document.getElementById('timelineChart').getContext('2d');
+            if (timelineChart) timelineChart.destroy();
+            timelineChart = new Chart(ctxTime, {
+                type: 'line',
+                data: {
+                    labels: data.timeline.map(t => t.hour + ':00'),
+                    datasets: [{
+                        label: 'จำนวนการบันทึก',
+                        data: data.timeline.map(t => t.count),
+                        borderColor: '#1e3c72',
+                        backgroundColor: 'rgba(30, 60, 114, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: { maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true }, x: { grid: { display: false } } } }
+            });
+        }
+
+        function renderTables(data) {
+            let htmlRooms = '';
+            data.critical_rooms.forEach(r => {
+                htmlRooms += `<tr><td class="fw-bold ps-4">ห้อง ${r.room}</td><td class="text-center text-danger fw-bold">${r.absent_count}</td><td class="text-center pe-4"><span class="badge ${r.absent_count > 10 ? 'bg-danger' : 'bg-warning'} rounded-pill px-3">${r.absent_count > 10 ? 'High' : 'Normal'}</span></td></tr>`;
+            });
+            $('#criticalRoomsTable').html(htmlRooms || '<tr><td colspan="3" class="text-center py-4">ไม่มีข้อมูลที่ผิดปกติ</td></tr>');
+
+            let htmlAtRisk = '';
+            data.at_risk.forEach(s => {
+                htmlAtRisk += `<tr><td class="ps-4">${s.first_name_th} ${s.last_name_th}</td><td>ห้อง ${s.room}</td><td class="text-center pe-4"><span class="badge bg-danger rounded-pill">${s.total_absent}</span></td></tr>`;
+            });
+            $('#atRiskTable').html(htmlAtRisk || '<tr><td colspan="3" class="text-center py-4">ไม่พบข้อมูล</td></tr>');
+        }
+
+        function renderRoomGender(data) {
+            let html = '';
+            let s = { tm: 0, tf: 0, pm: 0, pf: 0, am: 0, af: 0 };
+            
+            const n = (val) => parseInt(val || 0);
+            const list = data.room_gender_stats || [];
+
+            list.forEach(r => {
+                const total_m = n(r.total_m);
+                const total_f = n(r.total_f);
+                const total_r = total_m + total_f;
+                
+                const present_m = n(r.present_m);
+                const present_f = n(r.present_f);
+                const present_r = present_m + present_f;
+                
+                const absent_m = n(r.absent_m);
+                const absent_f = n(r.absent_f);
+                const absent_r = absent_m + absent_f;
+
+                const percent = total_r > 0 ? ((present_r / total_r) * 100).toFixed(0) : 0;
+                
+                const checked_count = n(r.checked_count);
+                const isComplete = checked_count >= total_r && total_r > 0;
+                const status = isComplete ? '<span class="status-badge status-done">ครบแล้ว</span>' : '<span class="status-badge status-not">ยังไม่ครบ</span>';
+
+                html += `
+                    <tr onclick="location.href='admin_room_report.html?room=${r.room}'" style="cursor: pointer;">
+                        <td class="fw-bold bg-light">ห้อง ${r.room}</td>
+                        <td>${total_m}</td><td>${total_f}</td><td class="fw-bold bg-primary bg-opacity-10 text-primary">${total_r}</td>
+                        <td>${present_m}</td><td>${present_f}</td><td class="fw-bold bg-success bg-opacity-10 text-success">${present_r}</td>
+                        <td>${absent_m}</td><td>${absent_f}</td><td class="fw-bold bg-danger bg-opacity-10 text-danger">${absent_r}</td>
+                        <td class="fw-bold text-primary">${percent}%</td>
+                        <td>${status}</td>
+                    </tr>
+                `;
+                s.tm += total_m; s.tf += total_f; s.pm += present_m; s.pf += present_f; s.am += absent_m; s.af += absent_f;
+            });
+
+            $('#roomGenderTableBody').html(html || '<tr><td colspan="12" class="text-center py-5">ไม่มีข้อมูลห้องเรียน</td></tr>');
+            
+            // Update Big Sum Cards
+            $('#sumTotalM').text(s.tm); $('#sumTotalF').text(s.tf); $('#sumTotalR').text(s.tm + s.tf); $('#sumTotal').text(s.tm + s.tf);
+            $('#sumPresentM').text(s.pm); $('#sumPresentF').text(s.pf); $('#sumPresentR').text(s.pm + s.pf); $('#sumPresent').text(s.pm + s.pf);
+            $('#sumAbsentM').text(s.am); $('#sumAbsentF').text(s.af); $('#sumAbsentR').text(s.am + s.af); $('#sumAbsent').text(s.am + s.af);
+        }
+    </script>
+</body>
+</html>

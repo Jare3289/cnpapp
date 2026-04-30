@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>ข้อมูลส่วนตัว | CNP APP</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="../public/css/style.css">
+    <link rel="stylesheet" href="../public/css/notion.css">
+    <style>
+        :root {
+            --navy-deep: #1e3c72;
+            --navy-light: #2a5298;
+            --accent-blue: #0d6efd;
+            --bg-gray: #f4f6f9;
+            --border-soft: rgba(0,0,0,0.08);
+            --shadow-premium: 0 10px 40px rgba(0, 0, 0, 0.05);
+        }
+
+        body { 
+            font-family: 'Google Sans', 'Sarabun', sans-serif; 
+            background-color: var(--bg-gray); 
+        }
+
+        /* ── Profile Banner ── */
+        .banner-profile {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            border-radius: 20px;
+            padding: 45px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 25px;
+            box-shadow: 0 15px 45px rgba(30, 60, 114, 0.15);
+        }
+
+        .banner-profile::after {
+            content: "";
+            position: absolute;
+            top: -50px;
+            right: -50px;
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .banner-content {
+            display: flex;
+            align-items: center;
+            gap: 35px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .avatar-box {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            flex-shrink: 0;
+        }
+
+        .avatar-box img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 5px solid rgba(255, 255, 255, 0.15);
+            background: white;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .avatar-box:hover img {
+            filter: brightness(0.8);
+            border-color: var(--accent-blue);
+        }
+
+        .avatar-box:hover .avatar-icon {
+            background: var(--accent-blue);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .avatar-icon {
+            transition: all 0.2s;
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            background: white;
+            color: var(--navy-deep);
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        .banner-info h1 {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+        }
+
+        .tag-role {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 6px 18px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            margin-bottom: 12px;
+        }
+
+        .info-email {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            opacity: 0.85;
+            background: rgba(0,0,0,0.1);
+            padding: 4px 15px;
+            border-radius: 8px;
+        }
+
+        /* ── Profile Layout ── */
+        .card-profile {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: var(--shadow-premium);
+            border: 1px solid var(--border-soft);
+        }
+
+        .card-title-sub {
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: var(--navy-deep);
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .label-form {
+            font-weight: 700;
+            color: #475569;
+            font-size: 0.88rem;
+            margin-bottom: 10px;
+        }
+
+        .input-group-premium {
+            position: relative;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .input-group-premium:focus-within {
+            border-color: var(--accent-blue);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.05);
+        }
+
+        .input-group-icon {
+            padding: 12px 18px;
+            color: #94a3b8;
+            font-size: 1.1rem;
+            background: #f1f5f9;
+            border-right: 1px solid #e2e8f0;
+        }
+
+        .input-field {
+            border: none;
+            background: transparent;
+            width: 100%;
+            padding: 12px 15px;
+            font-size: 0.95rem;
+            color: #1e293b;
+            font-weight: 500;
+        }
+
+        .input-field:focus { outline: none; }
+        .input-field:disabled { color: #64748b; background: #f1f5f9; }
+
+        /* ── Action Card ── */
+        .confirm-header {
+            background: var(--navy-deep);
+            color: white;
+            padding: 20px 25px;
+            border-radius: 20px 20px 0 0;
+            font-weight: 800;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn-update {
+            background: var(--navy-deep);
+            color: white;
+            border: none;
+            padding: 18px;
+            border-radius: 14px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-update:hover {
+            background: #162d56;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(30, 60, 114, 0.2);
+            color: white;
+        }
+
+        .alert-premium {
+            border: none;
+            border-radius: 12px;
+            padding: 15px;
+            font-size: 0.88rem;
+            display: flex;
+            gap: 12px;
+        }
+
+        .alert-info-premium { background: #f0f7ff; color: #1e40af; }
+        .alert-warn-premium { background: #fff8eb; color: #9a6700; }
+
+        @media (max-width: 991px) {
+            .banner-profile { padding: 35px 25px; }
+            .banner-content { flex-direction: column; text-align: center; gap: 20px; }
+            .tag-role { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="sidebar" id="mainSidebar"></div>
+
+        <main class="app-main main-panel d-flex flex-column min-vh-100 d-flex flex-column min-vh-100" style="background-color: #f8fafc;" id="main" tabindex="-1">
+            <div class="app-content-header main-header sticky-top bg-white border-bottom shadow-sm">
+                <div class="container-fluid d-flex align-items-center justify-content-between py-2 px-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <button class="btn btn-link text-navy d-lg-none px-0" onclick="toggleSidebar()"><i class="bi bi-list fs-3"></i></button>
+                        <h5 class="mb-0 fw-bold text-navy">ข้อมูลส่วนตัว</h5>
+                    </div>
+                    <div class="d-none d-md-flex align-items-center gap-2">
+                        <small class="text-muted">หน้าหลัก</small>
+                        <small class="text-muted opacity-50">/</small>
+                        <small class="text-muted fw-bold">ข้อมูลส่วนตัว</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="app-content page-content py-4 px-4 flex-grow-1 d-flex flex-column py-4 flex-grow-1 d-flex flex-column">
+                <div class="container-fluid" style="max-width: 1400px;">
+                    
+                    <!-- TOP BANNER -->
+                    <div class="banner-profile">
+                        <div class="banner-content">
+                            <div class="avatar-box" onclick="document.getElementById('photoInput').click()" style="cursor: pointer;">
+                                <img id="displayAvatar" src="../public/img/default-avatar.png" title="คลิกเพื่อเปลี่ยนรูป">
+                                <div class="avatar-icon"><i class="bi bi-camera-fill"></i></div>
+                                <input type="file" id="photoInput" hidden accept="image/*" onchange="previewImage(this)">
+                            </div>
+                            <div class="banner-info">
+                                <h1 id="banner_name">ผู้ดูแลระบบ</h1>
+                                <div class="tag-role">
+                                    <i class="bi bi-shield-check"></i> <span id="banner_role">ผู้ดูแลระบบ</span>
+                                </div>
+                                <div><span class="info-email" id="banner_email">email@example.com</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form id="profileForm" onsubmit="saveProfile(event)">
+                        <div class="row g-4">
+                            <!-- Left: Main Form -->
+                            <div class="col-lg-8">
+                                <div class="card-profile mb-4">
+                                    <div class="card-title-sub">
+                                        <i class="bi bi-person-circle fs-5"></i> ข้อมูลพื้นฐาน
+                                    </div>
+                                    <div class="row g-4">
+                                        <div class="col-md-7">
+                                            <label class="label-form">ชื่อ-นามสกุล *</label>
+                                            <div class="input-group-premium">
+                                                <div class="input-group-icon"><i class="bi bi-person"></i></div>
+                                                <input type="text" name="full_name" id="full_name" class="input-field" placeholder="ระบุชื่อ-นามสกุล" required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-5">
+                                            <label class="label-form">ตำแหน่ง</label>
+                                            <div class="input-group-premium">
+                                                <div class="input-group-icon"><i class="bi bi-briefcase"></i></div>
+                                                <input type="text" id="position_display" class="input-field" value="ผู้ดูแลระบบ" disabled>
+                                            </div>
+                                        </div>
+                                        <div class="col-12 mt-2">
+                                            <label class="label-form">อีเมล (สำหรับเข้าสู่ระบบ) *</label>
+                                            <div class="input-group-premium">
+                                                <div class="input-group-icon"><i class="bi bi-envelope"></i></div>
+                                                <input type="email" name="username" id="email_field" class="input-field" placeholder="example@email.com" required>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="card-profile">
+                                    <div class="card-title-sub">
+                                        <i class="bi bi-shield-lock fs-5"></i> เปลี่ยนรหัสผ่าน
+                                    </div>
+                                    <div class="alert-premium alert-info-premium mb-4">
+                                        <i class="bi bi-info-circle-fill mt-1"></i>
+                                        <span>เว้นว่างไว้ หากไม่ต้องการเปลี่ยนรหัสผ่านใหม่</span>
+                                    </div>
+                                    <div class="row g-4">
+                                        <div class="col-md-6">
+                                            <label class="label-form">รหัสผ่านใหม่ (ขั้นต่ำ 6 ตัวอักษร)</label>
+                                            <div class="input-group-premium">
+                                                <div class="input-group-icon"><i class="bi bi-key"></i></div>
+                                                <input type="password" name="password" id="password" class="input-field" placeholder="ระบุรหัสผ่านใหม่">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label class="label-form">ยืนยันรหัสผ่านใหม่</label>
+                                            <div class="input-group-premium">
+                                                <div class="input-group-icon"><i class="bi bi-check2-circle"></i></div>
+                                                <input type="password" id="confirm_password" class="input-field" placeholder="ยืนยันรหัสผ่านใหม่อีกครั้ง">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right: Confirmation -->
+                            <div class="col-lg-4">
+                                <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 20px;">
+                                    <div class="confirm-header">
+                                        <i class="bi bi-check-all fs-4"></i> ยืนยันการบันทึก
+                                    </div>
+                                    <div class="card-body p-4 bg-white">
+                                        <div class="alert-premium alert-warn-premium mb-4">
+                                            <i class="bi bi-exclamation-triangle-fill mt-1"></i>
+                                            <span>เพื่อความปลอดภัย กรุณากรอกรหัสผ่านปัจจุบันเพื่อยืนยันการแก้ไขข้อมูล</span>
+                                        </div>
+                                        <div class="mb-4">
+                                            <label class="label-form">รหัสผ่านปัจจุบัน *</label>
+                                            <div class="input-group-premium">
+                                                <div class="input-group-icon"><i class="bi bi-shield-lock"></i></div>
+                                                <input type="password" id="current_password" class="input-field" placeholder="ระบุรหัสผ่านปัจจุบัน" required>
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn-update">
+                                            <i class="bi bi-cloud-check-fill fs-5"></i> บันทึกข้อมูล
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- CLEAN FOOTER -->
+                    <div class="mt-5 py-4 border-top text-center text-md-start">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <p class="text-muted small mb-1">ระบบลงทะเบียนและจัดการข้อมูลนักเรียน</p>
+                                <p class="text-muted fw-bold small mb-0">โรงเรียนชัยนาทพิทยาคม</p>
+                            </div>
+                            <div class="col-md-6 text-md-end mt-2 mt-md-0">
+                                <p class="text-muted small mb-0">
+                                    <i class="bi bi-shield-fill-check me-1"></i> ระบบรักษาความปลอดภัยข้อมูลส่วนบุคคล
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div><script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="../public/js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = await checkAuth('admin');
+            if (user) {
+                await fetchProfile();
+            }
+        });
+
+        let selectedPhotoBase64 = null;
+
+        function previewImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('displayAvatar').src = e.target.result;
+                    selectedPhotoBase64 = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        async function fetchProfile() {
+            try {
+                const res = await fetch('../api/teacher/profile.php');
+                const result = await res.json();
+                if (result.success) {
+                    const data = result.data;
+                    const fullName = ((data.first_name_th || '') + ' ' + (data.last_name_th || '')).trim();
+                    
+                    document.getElementById('full_name').value = fullName || '';
+                    document.getElementById('email_field').value = data.email || data.username || '';
+                    document.getElementById('banner_name').innerText = fullName || data.username || 'ผู้ดูแลระบบ';
+                    document.getElementById('banner_email').innerText = data.email || data.username || 'email@example.com';
+                    
+                    if (data.photo) {
+                        document.getElementById('displayAvatar').src = '../' + data.photo;
+                    }
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        async function saveProfile(e) {
+            e.preventDefault();
+            const fullName = document.getElementById('full_name').value.trim();
+            const email = document.getElementById('email_field').value.trim();
+            const password = document.getElementById('password').value;
+            const confirm = document.getElementById('confirm_password').value;
+            const currentPassword = document.getElementById('current_password').value;
+
+            if (password && password.length < 6) {
+                Swal.fire('แจ้งเตือน', 'รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 6 ตัวอักษร', 'warning');
+                return;
+            }
+
+            if (password && password !== confirm) {
+                Swal.fire('แจ้งเตือน', 'รหัสผ่านใหม่และยืนยันรหัสผ่านไม่ตรงกัน', 'error');
+                return;
+            }
+
+            // Split Name
+            const nameParts = fullName.split(' ');
+            const firstName = nameParts[0] || '';
+            const lastName = nameParts.slice(1).join(' ') || '';
+
+            const data = {
+                first_name_th: firstName,
+                last_name_th: lastName,
+                username: email, 
+                email: email,    
+                password: password,
+                current_password: currentPassword,
+                position: 'ผู้ดูแลระบบ'
+            };
+
+            if (selectedPhotoBase64) {
+                data.photo_base64 = selectedPhotoBase64;
+            }
+            
+            const { isConfirmed } = await Swal.fire({ 
+                title: 'ยืนยันการแก้ไขข้อมูล?',
+                text: 'คุณต้องการบันทึกการเปลี่ยนแปลงข้อมูลส่วนตัวใช่หรือไม่?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'บันทึกข้อมูล',
+                cancelButtonText: 'ยกเลิก',
+                confirmButtonColor: '#1e3c72'
+            });
+
+            if (isConfirmed) {
+                Swal.fire({ title: 'กำลังดำเนินการ...', didOpen: () => Swal.showLoading() });
+                
+                try {
+                    const res = await fetch('../api/teacher/profile.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+                    const result = await res.json();
+                    if (result.success) {
+                        Swal.fire('สำเร็จ', 'บันทึกข้อมูลส่วนตัวของคุณเรียบร้อยแล้ว', 'success').then(() => location.reload());
+                    } else {
+                        Swal.fire('ผิดพลาด', result.error || 'ไม่สามารถบันทึกข้อมูลได้', 'error');
+                    }
+                } catch (e) { Swal.fire('Error', 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้', 'error'); }
+            }
+        }
+    </script>
+</body>
+</html>

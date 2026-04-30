@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>ประวัติการเช็คชื่อ | CNP APP</title>
+    <meta content='width=device-width, initial-scale=1.0, shrink-to-fit=no' name='viewport' />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="../public/css/style.css">
+    <link rel="stylesheet" href="../public/css/notion.css">
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="sidebar" id="mainSidebar">
+            <div class="logo-header d-flex align-items-center justify-content-between">
+                <a href="student_dashboard.html" class="navbar-brand fw-bold text-navy d-flex align-items-center">
+                    <img src="../public/img/logo.png" alt="Logo" class="me-2"
+                        style="height: 35px; width: auto; object-fit: contain;" onerror="this.style.display='none'">
+                    <span>CNP <span style="color: var(--pink-vibrant);">APP</span></span>
+                </a>
+                <button class="btn btn-link text-navy d-lg-none" onclick="toggleSidebar()"><i
+                        class="fas fa-times"></i></button>
+            </div>
+            <div class="sidebar-wrapper scrollbar-inner">
+                <div class="sidebar-content" id="mainSidebarContent">
+                    <!-- Sidebar will be injected by main.js -->
+                </div>
+            </div>
+        </div>
+
+        <main class="app-main main-panel d-flex flex-column min-vh-100 d-flex flex-column min-vh-100" style="background-color: #f8fafc;" id="main" tabindex="-1">
+            <div class="app-content-header main-header sticky-top bg-white">
+                <div class="container-fluid d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center gap-3">
+                        <button class="btn btn-link text-navy d-lg-none px-0" onclick="toggleSidebar()"><i
+                                class="fas fa-bars"></i></button>
+                        <h5 class="mb-0 fw-bold text-navy">ประวัติการเข้าเรียน</h5>
+                    </div>
+                </div>
+            </div>
+
+            <div class="app-content page-content flex-grow-1 d-flex flex-column py-4 flex-grow-1 d-flex flex-column">
+                <div class="card border-0 shadow-sm overflow-hidden">
+                    <div class="card-header bg-white border-0 py-3">
+                        <h5 class="fw-bold text-navy mb-0">รายการการเช็คชื่อทั้งหมด</h5>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light small text-uppercase">
+                                <tr>
+                                    <th>วันที่</th>
+                                    <th>ระดับชั้น / ห้อง</th>
+                                    <th>สถานะ</th>
+                                    <th>ครูผู้บันทึก</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attendanceBody">
+                                <tr>
+                                    <td colspan="4" class="text-center py-5 text-muted">กำลังโหลดข้อมูล...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div><script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../public/js/main.js"></script>
+    <script>
+        function toggleSidebar() { document.getElementById('mainSidebar').classList.toggle('active'); }
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = await checkAuth('student');
+            if (user) {
+                try {
+                    const res = await fetch('../api/student/attendance');
+                    if (res.ok) {
+                        const data = await res.json();
+                        const tbody = document.getElementById('attendanceBody');
+                        tbody.innerHTML = '';
+                        if (data.attendance.length === 0) {
+                            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-5 text-muted">ไม่พบข้อมูล</td></tr>';
+                            return;
+                        }
+
+                        data.attendance.forEach(record => {
+                            let badgeClass = 'bg-secondary-subtle text-secondary';
+                            if (record.status === 'มา') badgeClass = 'bg-success-subtle text-success';
+                            else if (record.status === 'ขาด') badgeClass = 'bg-danger-subtle text-danger';
+                            else if (record.status === 'ลา') badgeClass = 'bg-warning-subtle text-warning';
+                            else if (record.status === 'สาย') badgeClass = 'bg-info-subtle text-info';
+
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td class="fw-bold text-muted">${record.date}</td>
+                                <td>${record.class_name}</td>
+                                <td><span class="badge rounded-pill ${badgeClass} px-3 py-2">${record.status}</span></td>
+                                <td class="small fw-semibold text-navy">${record.recorded_by_name}</td>
+                            `;
+                            tbody.appendChild(tr);
+                        });
+                    }
+                } catch (e) {
+                    document.getElementById('attendanceBody').innerHTML = '<tr><td colspan="4" class="text-center py-5 text-danger">เกิดข้อผิดพลาดในการดึงข้อมูล</td></tr>';
+                }
+            }
+        });
+    </script>
+</body>
+
+</html>

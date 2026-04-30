@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8" />
+    <title>ประวัติคะแนนพฤติกรรม | CNP APP</title>
+    <meta content='width=device-width, initial-scale=1.0, shrink-to-fit=no' name='viewport' />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../public/css/style.css">
+    <style>
+        .table-history { font-size: 0.85rem; width: 100%; }
+        .table-history thead th { background-color: #1e293b !important; color: white !important; padding: 15px; font-weight: 600; }
+        .table-history tbody td { padding: 15px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        
+        .badge-pos { background-color: #dcfce7; color: #15803d; font-weight: 800; border-radius: 6px; padding: 4px 10px; }
+        .badge-neg { background-color: #fee2e2; color: #b91c1c; font-weight: 800; border-radius: 6px; padding: 4px 10px; }
+        
+        .filter-btn { border-radius: 10px; padding: 8px 20px; font-weight: 600; border: 1px solid #e2e8f0; background: white; transition: 0.3s; }
+        .filter-btn.active { background: #1e293b; color: white; border-color: #1e293b; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="sidebar" id="mainSidebar"></div>
+
+        <main class="app-main main-panel d-flex flex-column min-vh-100" style="background-color: #f8fafc;" id="main">
+            <div class="app-content-header main-header sticky-top bg-white border-bottom shadow-sm">
+                <div class="container-fluid d-flex align-items-center justify-content-between py-2">
+                    <div class="d-flex align-items-center gap-3">
+                        <button class="btn btn-link text-navy d-lg-none px-0" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                        <h5 class="mb-0 fw-bold"><i class="bi bi-clock-history text-primary me-2"></i>ประวัติคะแนนพฤติกรรม</h5>
+                    </div>
+                </div>
+            </div>
+
+            <div class="app-content page-content content-padding py-4">
+                <div class="container-fluid">
+                    
+                    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+                        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                            <div>
+                                <h5 class="fw-bold mb-0">รายการพฤติกรรมทั้งหมด</h5>
+                                <p class="text-muted small mb-0">ตรวจสอบและติดตามการบันทึกคะแนนของนักเรียนทุกคน</p>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="filter-btn active" onclick="filterHistory('all', this)">ทั้งหมด</button>
+                                <button class="filter-btn text-success" onclick="filterHistory('pos', this)">บวกคะแนน</button>
+                                <button class="filter-btn text-danger" onclick="filterHistory('neg', this)">หักคะแนน</button>
+                            </div>
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table-history">
+                                <thead>
+                                    <tr>
+                                        <th>วันที่/เวลา</th>
+                                        <th>นักเรียน</th>
+                                        <th>ห้อง</th>
+                                        <th>รายการ</th>
+                                        <th class="text-center">คะแนน</th>
+                                        <th>ผู้บันทึก</th>
+                                        <th>หมายเหตุ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historyBody">
+                                    <!-- Data -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../public/js/main.js"></script>
+    <script>
+        let fullData = [];
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkAuth(['admin', 'teacher']);
+            loadHistory();
+        });
+
+        async function loadHistory() {
+            try {
+                const res = await fetch('../api/admin/credit_score_history.php');
+                const data = await res.json();
+                if(data.success) {
+                    fullData = data.data;
+                    renderHistory(fullData);
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        function renderHistory(data) {
+            const body = document.getElementById('historyBody');
+            if(data.length === 0) {
+                body.innerHTML = '<tr><td colspan="7" class="text-center py-5 text-muted">ไม่พบข้อมูลประวัติ</td></tr>';
+                return;
+            }
+
+            body.innerHTML = data.map(row => {
+                const date = new Date(row.created_at).toLocaleString('th-TH', { 
+                    year: '2-digit', month: 'short', day: 'numeric', 
+                    hour: '2-digit', minute: '2-digit' 
+                });
+                const pointsClass = row.points >= 0 ? 'badge-pos' : 'badge-neg';
+                const pointsText = row.points >= 0 ? `+${row.points}` : row.points;
+                
+                return `
+                    <tr>
+                        <td class="text-muted small">${date}</td>
+                        <td>
+                            <div class="fw-bold">${row.prefix}${row.first_name_th} ${row.last_name_th}</div>
+                            <div class="small text-muted">${row.student_id}</div>
+                        </td>
+                        <td>${row.room}</td>
+                        <td>
+                            <div class="fw-bold">${row.item_name}</div>
+                            <div class="x-small text-muted">${row.category_name}</div>
+                        </td>
+                        <td class="text-center"><span class="${pointsClass}">${pointsText}</span></td>
+                        <td><span class="badge bg-light text-dark fw-bold">${row.recorder_name}</span></td>
+                        <td class="small text-muted">${row.remark || '-'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function filterHistory(type, btn) {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            if(type === 'all') {
+                renderHistory(fullData);
+            } else if(type === 'pos') {
+                renderHistory(fullData.filter(d => d.points >= 0));
+            } else if(type === 'neg') {
+                renderHistory(fullData.filter(d => d.points < 0));
+            }
+        }
+    </script>
+</body>
+</html>

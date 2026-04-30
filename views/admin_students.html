@@ -1,0 +1,2118 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+	<meta charset="UTF-8" />
+	<title>ข้อมูลนักเรียน | CNP APP</title>
+	<meta content='width=device-width, initial-scale=1.0, shrink-to-fit=no' name='viewport' />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../public/css/style.css?v=3">
+    <style>
+        /* Expando Row Styles */
+        .group-header {
+            background-color: #f8fafc !important;
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.2s;
+        }
+        .group-header:hover {
+            background-color: #f1f5f9 !important;
+        }
+        .group-header i.expando-icon {
+            transition: transform 0.3s;
+            display: inline-block;
+        }
+        .group-header.collapsed i.expando-icon {
+            transform: rotate(-90deg);
+        }
+        .child-row.collapsed, .sub-child-row.collapsed {
+            display: none;
+        }
+        .sub-group-header.collapsed-sub i.expando-icon {
+            transform: rotate(-90deg);
+        }
+    </style>
+</head>
+<body class="bg-light">
+	<div class="wrapper">
+		<div class="sidebar" id="mainSidebar"></div>
+
+		<main class="app-main main-panel d-flex flex-column min-vh-100 d-flex flex-column min-vh-100" style="background-color: #f8fafc;" id="main" tabindex="-1">
+			<div class="app-content-header main-header sticky-top">
+				<div class="container-fluid d-flex align-items-center justify-content-between py-2">
+					<div class="d-flex align-items-center gap-3">
+                        <button class="btn btn-link text-navy d-lg-none px-0" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb breadcrumb-modern mb-0 small">
+                                <li class="breadcrumb-item"><a href="admin_dashboard.html">หน้าหลัก</a></li>
+                                <li class="breadcrumb-item active">ข้อมูลนักเรียน</li>
+                            </ol>
+                        </nav>
+                    </div>
+				</div>
+			</div>
+
+			<div class="app-content page-content py-4 flex-grow-1 d-flex flex-column py-4 flex-grow-1 d-flex flex-column">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+                    <div>
+                        <h4 class="fw-bold text-navy mb-1">ข้อมูลนักเรียน</h4>
+                        <p class="text-muted small mb-0">จัดการประวัตินักเรียน ชั้นเรียน และข้อมูลการติดต่อเชิงลึก</p>
+                    </div>
+                    <div class="d-flex gap-2 align-items-center flex-wrap">
+                        <a href="../api/admin/download-template.php?type=student" class="btn btn-outline-secondary rounded-pill px-3 fw-bold shadow-sm hover-scale" title="โหลดตัวอย่างไฟล์ CSV">
+                            <i class="fas fa-file-csv me-1"></i> Template
+                        </a>
+                        <button class="btn btn-outline-primary rounded-pill px-4 fw-bold shadow-sm hover-scale" onclick="openUploadModal()">
+                            <i class="fas fa-file-upload me-2"></i> อัปโหลดข้อมูล
+                        </button>
+                        <button class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm hover-scale" onclick="addStudent()">
+                            <i class="fas fa-plus me-2"></i> เพิ่มนักเรียน
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card border-0 shadow-sm rounded-4 mb-4 overflow-hidden">
+                    <div class="card-body p-3 bg-white">
+                        <div class="row g-3 align-items-center">
+                            <div class="col-lg-4">
+                                <div class="input-group input-group-modern shadow-none border rounded-pill overflow-hidden">
+                                    <span class="input-group-text bg-white border-0 ps-3"><i class="fas fa-search text-muted opacity-50"></i></span>
+                                    <input type="text" id="studentSearch" class="form-control border-0 py-2 ps-1" placeholder="ค้นหาชื่อ, รหัส หรือห้อง..." onkeyup="filterStudents()">
+                                </div>
+                            </div>
+                            <div class="col-lg-8">
+                                <div class="d-flex flex-wrap align-items-center gap-2 justify-content-lg-end">
+                                    <div class="d-flex align-items-center gap-2 px-2 border-end me-2 d-none d-xl-flex">
+                                        <i class="bi bi-layers text-primary"></i>
+                                        <label class="small fw-bold text-muted mb-0 text-nowrap">จัดกลุ่มตาม:</label>
+                                        <select id="groupBySelect" class="form-select form-select-sm border-0 bg-light rounded-pill px-3" style="width:140px;" onchange="filterStudents()">
+                                            <option value="">-- ไม่จัดกลุ่ม --</option>
+                                            <option value="grade_level" selected>ระดับชั้น</option>
+                                            <option value="room">ห้องเรียน</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <select class="form-select form-select-sm border rounded-pill px-3" id="gradeFilter" style="width:110px;" onchange="filterStudents()">
+                                        <option value="">ทุกระดับชั้น</option>
+                                        <option value="ม.1">ม.1</option><option value="ม.2">ม.2</option><option value="ม.3">ม.3</option>
+                                        <option value="ม.4">ม.4</option><option value="ม.5">ม.5</option><option value="ม.6">ม.6</option>
+                                    </select>
+                                    
+                                    <select class="form-select form-select-sm border rounded-pill px-3" id="roomFilter" style="width:120px;" onchange="filterStudents()">
+                                        <option value="">ทุกห้อง</option>
+                                        <optgroup label="ม.1">
+                                            <option value="101">101</option><option value="102">102</option><option value="103">103</option><option value="104">104</option><option value="105">105</option>
+                                            <option value="106">106</option><option value="107">107</option><option value="108">108</option><option value="109">109</option><option value="110">110</option>
+                                        </optgroup>
+                                        <optgroup label="ม.2">
+                                            <option value="201">201</option><option value="202">202</option><option value="203">203</option><option value="204">204</option><option value="205">205</option>
+                                            <option value="206">206</option><option value="207">207</option><option value="208">208</option><option value="209">209</option><option value="210">210</option>
+                                        </optgroup>
+                                        <optgroup label="ม.3">
+                                            <option value="301">301</option><option value="302">302</option><option value="303">303</option><option value="304">304</option><option value="305">305</option>
+                                            <option value="306">306</option><option value="307">307</option><option value="308">308</option><option value="309">309</option><option value="310">310</option>
+                                        </optgroup>
+                                        <optgroup label="ม.4">
+                                            <option value="401">401</option><option value="402">402</option><option value="403">403</option><option value="404">404</option><option value="405">405</option>
+                                            <option value="406">406</option><option value="407">407</option><option value="408">408</option><option value="409">409</option><option value="410">410</option>
+                                        </optgroup>
+                                        <optgroup label="ม.5">
+                                            <option value="501">501</option><option value="502">502</option><option value="503">503</option><option value="504">504</option><option value="505">505</option>
+                                            <option value="506">506</option><option value="507">507</option><option value="508">508</option><option value="509">509</option><option value="510">510</option>
+                                        </optgroup>
+                                        <optgroup label="ม.6">
+                                            <option value="601">601</option><option value="602">602</option><option value="603">603</option><option value="604">604</option><option value="605">605</option>
+                                            <option value="606">606</option><option value="607">607</option><option value="608">608</option><option value="609">609</option><option value="610">610</option>
+                                        </optgroup>
+                                    </select>
+
+                                    <div class="btn-group bg-light rounded-pill p-1 border overflow-hidden ms-2 shadow-none">
+                                        <button type="button" class="btn btn-sm rounded-pill px-3 py-1 fw-bold active border-0" id="view-table" onclick="setViewMode('table')">
+                                            <i class="bi bi-list-task"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-sm rounded-pill px-3 py-1 fw-bold border-0" id="view-card" onclick="setViewMode('card')">
+                                            <i class="bi bi-grid-fill"></i>
+                                        </button>
+                                    </div>
+
+                                    <select id="perPageSelect" class="form-select form-select-sm border rounded-pill px-3 ms-2 shadow-none d-none" style="width:80px;" onchange="changePerPage(this.value)">
+                                        <option value="25">25</option>
+                                        <option value="40">40</option>
+                                        <option value="50">50</option>
+                                        <option value="100">100</option>
+                                        <option value="9999" selected>ทั้งหมด</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="studentTableView">
+                    <div class="card border-0 mb-4 bg-transparent shadow-none">
+                        <div class="card-header border-bottom-0 py-3 px-4" style="background: #2b4b8a; border-radius: 12px 12px 0 0;">
+                            <h5 class="fw-bold text-white mb-0"><i class="bi bi-people-fill me-2"></i> รายชื่อนักเรียน</h5>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table align-middle mb-0 table-modern">
+                                    <thead class="sticky-top">
+                                        <tr>
+                                            <th style="width: 8%; cursor: pointer;" class="text-center py-3 text-secondary small fw-bold text-uppercase" onclick="sortTable('number_in_class')">เลขที่ <i class="bi bi-arrow-down-up ms-1 text-muted" style="font-size: 0.7rem;"></i></th>
+                                            <th style="width: 35%; cursor: pointer;" class="text-left py-3 text-secondary small fw-bold text-uppercase ps-5" onclick="sortTable('first_name_th')">ข้อมูลนักเรียน <i class="bi bi-arrow-down-up ms-1 text-muted" style="font-size: 0.7rem;"></i></th>
+                                            <th style="width: 12%; cursor: pointer;" class="text-center py-3 text-secondary small fw-bold text-uppercase" onclick="sortTable('nickname')">ชื่อเล่น <i class="bi bi-arrow-down-up ms-1 text-muted" style="font-size: 0.7rem;"></i></th>
+                                            <th style="width: 15%; cursor: pointer;" class="text-center py-3 text-secondary small fw-bold text-uppercase" onclick="sortTable('faculty')">คณะ <i class="bi bi-arrow-down-up ms-1 text-muted" style="font-size: 0.7rem;"></i></th>
+                                            <th style="width: 10%; cursor: pointer;" class="text-center py-3 text-secondary small fw-bold text-uppercase" onclick="sortTable('birth_date')">อายุ <i class="bi bi-arrow-down-up ms-1 text-muted" style="font-size: 0.7rem;"></i></th>
+                                            <th style="width: 15%;" class="text-center py-3 text-secondary small fw-bold text-uppercase">จัดการ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="studentTableBody" style="counter-reset: row-number 0;">
+                                        <tr><td colspan="6" class="text-center py-5">กำลังโหลดข้อมูลนักเรียน...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="studentCardView" class="d-none">
+                    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xxl-5 g-4" id="studentCardGrid">
+                        <!-- Student cards injected here -->
+                    </div>
+                </div>
+
+                <!-- Pagination footer -->
+                <!-- Pagination footer hidden -->
+                <div class="px-2 d-none">
+                    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2" id="paginationWrapper">
+                        <small class="text-muted" id="paginationInfo">กำลังโหลด...</small>
+                        <nav>
+                            <ul class="pagination pagination-sm mb-0" id="paginationControls"></ul>
+                        </nav>
+                    </div>
+                </div>
+
+			</div>
+		</div>
+	</div>
+
+    <!-- Upload Modal -->
+    <div class="modal fade" id="uploadModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4">
+                <div class="modal-header border-0 pb-0 ps-4 pt-4">
+                    <h5 class="fw-bold text-navy">อัปโหลดข้อมูลนักเรียน</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="alert alert-info border-0 rounded-3 small">
+                        <i class="fas fa-info-circle me-2"></i> กรุณาใช้ไฟล์ <strong>.csv (UTF-8)</strong> ที่มีหัวตารางตาม Template
+                    </div>
+                    <form id="uploadForm">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">เลือกไฟล์ข้อมูล</label>
+                            <input type="file" class="form-control rounded-3" id="excelFile" accept=".csv" required>
+                        </div>
+                        <div class="d-grid mt-4">
+                            <button type="submit" id="btnUploadSubmit" class="btn btn-primary rounded-pill py-2 fw-bold">เริ่มนำเข้าข้อมูล</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Student Modal (Tab-based like teacher page) -->
+    <div class="modal fade" id="editStudentModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
+                <div class="modal-header text-white border-0 py-3 px-4" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-white bg-opacity-20 rounded-circle d-flex align-items-center justify-content-center" style="width:45px;height:45px;">
+                            <i class="bi bi-pencil-square fs-4 text-white"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-0 fw-bold">แก้ไขข้อมูลนักเรียน</h5>
+                            <small class="opacity-75" id="editModalSubtitle">กำลังโหลด...</small>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body p-0">
+                    <form id="editStudentForm" enctype="multipart/form-data">
+                        <input type="hidden" id="edit_id">
+                        <input type="hidden" id="edit_student_id">
+
+                        <!-- Tab Navigation -->
+                        <div class="bg-light border-bottom px-4 pt-3">
+                            <ul class="nav nav-tabs border-0" id="editStudentTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active fw-bold px-4" id="tab-basic-tab" data-bs-toggle="tab" data-bs-target="#tab-basic" type="button">
+                                        <i class="bi bi-person-fill me-2 text-navy"></i>ข้อมูลพื้นฐาน
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link fw-bold px-4" id="tab-contact-tab" data-bs-toggle="tab" data-bs-target="#tab-contact" type="button">
+                                        <i class="bi bi-telephone-fill me-2 text-primary"></i>ติดต่อ & ที่อยู่
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link fw-bold px-4" id="tab-health-tab" data-bs-toggle="tab" data-bs-target="#tab-health" type="button">
+                                        <i class="bi bi-heart-pulse-fill me-2 text-danger"></i>สุขภาพ
+                                    </button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link fw-bold px-4" id="tab-family-tab" data-bs-toggle="tab" data-bs-target="#tab-family" type="button">
+                                        <i class="bi bi-people-fill me-2 text-success"></i>ผู้ปกครอง
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div class="tab-content px-4 py-4" style="max-height: 60vh; overflow-y: auto;">
+
+                            <!-- TAB 1: ข้อมูลพื้นฐาน -->
+                            <div class="tab-pane fade show active" id="tab-basic" role="tabpanel">
+                                <div class="row g-0 align-items-start">
+
+                                    <!-- Photo column -->
+                                    <div class="col-md-3 text-center border-end pe-4 pt-2">
+                                        <div class="position-relative d-inline-block mb-2">
+                                            <img id="studentPhotoPreview" src="../public/img/logo.png"
+                                                 class="rounded-4 shadow-sm border" style="width:140px;height:155px;object-fit:cover;">
+                                            <label for="studentPhotoInput"
+                                                   class="btn btn-primary btn-sm rounded-circle position-absolute bottom-0 end-0 shadow"
+                                                   style="width:35px;height:35px;padding:0;line-height:35px;" title="เปลี่ยนรูปภาพ">
+                                                <i class="fas fa-camera"></i>
+                                            </label>
+                                            <input type="file" id="studentPhotoInput" name="photo" accept="image/*" class="d-none"
+                                                   onchange="previewStudentPhoto(this)">
+                                        </div>
+                                        <!-- Student ID below photo -->
+                                        <div class="badge bg-navy text-white px-3 py-2 rounded-pill mb-1 fs-6 fw-bold" id="photoStudentIdBadge">-</div>
+                                        <div class="small text-muted fw-semibold">รูปถ่ายนักเรียน</div>
+                                        <div style="font-size:0.65rem;" class="text-muted opacity-75">JPG, PNG ไม่เกิน 2MB</div>
+                                    </div>
+
+                                    <!-- Fields column -->
+                                    <div class="col-md-9 ps-4">
+                                        <h6 class="text-navy fw-bold border-bottom pb-2 mb-3"><i class="bi bi-person-badge me-2"></i>1. ข้อมูลส่วนตัว</h6>
+                                        <div class="row g-3">
+                                            <!-- Row 1: prefix + first_name_th + last_name_th -->
+                                            <div class="col-md-2">
+                                                <label class="form-label small fw-bold">คำนำหน้า</label>
+                                                <select id="edit_prefix" class="form-select rounded-3">
+                                                    <option value="เด็กชาย">เด็กชาย</option>
+                                                    <option value="เด็กหญิง">เด็กหญิง</option>
+                                                    <option value="นาย">นาย</option>
+                                                    <option value="นางสาว">นางสาว</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <label class="form-label small fw-bold">ชื่อ (ภาษาไทย) <span class="text-danger">*</span></label>
+                                                <input type="text" id="edit_first_name_th" class="form-control rounded-3" required>
+                                            </div>
+                                            <div class="col-md-5">
+                                                <label class="form-label small fw-bold">นามสกุล (ภาษาไทย) <span class="text-danger">*</span></label>
+                                                <input type="text" id="edit_last_name_th" class="form-control rounded-3" required>
+                                            </div>
+                                            <!-- Row 2: English (uppercase enforced) -->
+                                            <div class="col-md-6">
+                                                <label class="form-label small fw-bold">First Name (ENGLISH)</label>
+                                                <input type="text" id="edit_first_name_en" class="form-control rounded-3"
+                                                       style="text-transform:uppercase;"
+                                                       oninput="this.value=this.value.toUpperCase()">
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="form-label small fw-bold">Last Name (ENGLISH)</label>
+                                                <input type="text" id="edit_last_name_en" class="form-control rounded-3"
+                                                       style="text-transform:uppercase;"
+                                                       oninput="this.value=this.value.toUpperCase()">
+                                            </div>
+                                            <!-- Row 3: nickname (Thai only) -->
+                                            <div class="col-md-4">
+                                                <label class="form-label small fw-bold">ชื่อเล่น <span class="text-muted small">(ภาษาไทยเท่านั้น)</span></label>
+                                                <input type="text" id="edit_nickname" class="form-control rounded-3"
+                                                       pattern="[\u0E00-\u0E7F\s]+" title="กรอกเฉพาะภาษาไทย"
+                                                       oninput="this.value=this.value.replace(/[^\u0E00-\u0E7F\s]/g,'')">
+                                            </div>
+                                            <!-- Row 4: id_card (13 digits) -->
+                                            <div class="col-md-5">
+                                                <label class="form-label small fw-bold">เลขบัตรประชาชน <span class="text-danger">*</span></label>
+                                                <input type="text" id="edit_id_card" class="form-control rounded-3 font-monospace"
+                                                       maxlength="13" minlength="13" pattern="\d{13}"
+                                                       placeholder="เลข 13 หลัก"
+                                                       oninput="this.value=this.value.replace(/\D/g,'').slice(0,13);validateIdCard(this)">
+                                                <div class="invalid-feedback">ต้องเป็นตัวเลข 13 หลักเท่านั้น</div>
+                                            </div>
+                                            <!-- Row 5: birth_date (พ.ศ.) + auto age/day -->
+                                            <div class="col-md-4">
+                                                <label class="form-label small fw-bold">วัน/เดือน/ปีเกิด (พ.ศ.) <span class="text-danger">*</span></label>
+                                                <div class="input-group">
+                                                    <input type="text" id="edit_birth_date_be" class="form-control rounded-start-3"
+                                                           placeholder="DD/MM/YYYY" maxlength="10"
+                                                           oninput="formatBEDate(this)" onblur="calcAgeFromBE()">
+                                                    <input type="hidden" id="edit_birth_date">
+                                                </div>
+                                                <!-- Auto-calc result -->
+                                                <div id="birthInfoBox" class="mt-2 rounded-3 px-3 py-2 bg-light border small d-none">
+                                                    <div class="text-muted">วันเกิด: <strong id="birthDayName" class="text-navy"></strong></div>
+                                                    <div class="text-muted">อายุ: <strong id="ageDisplay" class="text-success"></strong></div>
+                                                </div>
+                                            </div>
+                                            <!-- ethnicity / nationality / religion -->
+                                            <div class="col-md-4">
+                                                <label class="form-label small fw-bold">เชื้อชาติ</label>
+                                                <select id="edit_ethnicity" class="form-select rounded-3">
+                                                    <option value="ไทย">ไทย</option>
+                                                    <option value="จีน">จีน</option>
+                                                    <option value="อื่นๆ">อื่นๆ</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label small fw-bold">สัญชาติ</label>
+                                                <select id="edit_nationality" class="form-select rounded-3">
+                                                    <option value="ไทย">ไทย</option>
+                                                    <option value="จีน">จีน</option>
+                                                    <option value="อื่นๆ">อื่นๆ</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <label class="form-label small fw-bold">ศาสนา</label>
+                                                <select id="edit_religion" class="form-select rounded-3">
+                                                    <option value="พุทธ">พุทธ</option>
+                                                    <option value="คริสต์">คริสต์</option>
+                                                    <option value="อิสลาม">อิสลาม</option>
+                                                    <option value="อื่นๆ">อื่นๆ</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <!-- Section 2: ข้อมูลการศึกษา (read-only unless admin/teacher) -->
+                                        <h6 class="text-navy fw-bold border-bottom pb-2 mb-3 mt-4">
+                                            <i class="bi bi-mortarboard-fill me-2"></i>2. ข้อมูลการศึกษา
+                                            <span class="badge bg-warning text-dark ms-2 small fw-normal" id="eduLockBadge">
+                                                <i class="bi bi-lock-fill me-1"></i>แก้ได้เฉพาะแอดมิน/ครู
+                                            </span>
+                                        </h6>
+                                        <div class="row g-3">
+                                            <div class="col-md-4">
+                                                <label class="form-label small fw-bold">ระดับชั้น</label>
+                                                <input type="text" id="edit_grade_level" class="form-control rounded-3" placeholder="เช่น มัธยมศึกษาปีที่ 5">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label small fw-bold">ห้อง</label>
+                                                <input type="text" id="edit_room" class="form-control rounded-3">
+                                            </div>
+                                            <div class="col-md-2">
+                                                <label class="form-label small fw-bold">เลขที่</label>
+                                                <input type="number" id="edit_number_in_class" class="form-control rounded-3">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <label class="form-label small fw-bold">คณะสี</label>
+                                                <div class="d-flex gap-3 pt-1" id="housePicker">
+                                                    <div class="house-option rounded-circle cursor-pointer shadow-sm" 
+                                                         data-value="ขุนสรรค์" onclick="selectHouse(this)" title="ขุนสรรค์"
+                                                         style="width:32px; height:32px; background:#f48fb1; border:3px solid white; outline:1px solid #ddd;">
+                                                    </div>
+                                                    <div class="house-option rounded-circle cursor-pointer shadow-sm" 
+                                                         data-value="ขุนศรี" onclick="selectHouse(this)" title="ขุนศรี"
+                                                         style="width:32px; height:32px; background:#ef5350; border:3px solid white; outline:1px solid #ddd;">
+                                                    </div>
+                                                    <div class="house-option rounded-circle cursor-pointer shadow-sm" 
+                                                         data-value="เจ้ายี่" onclick="selectHouse(this)" title="เจ้ายี่"
+                                                         style="width:32px; height:32px; background:#66bb6a; border:3px solid white; outline:1px solid #ddd;">
+                                                    </div>
+                                                    <div class="house-option rounded-circle cursor-pointer shadow-sm" 
+                                                         data-value="ธรรมจักร" onclick="selectHouse(this)" title="ธรรมจักร"
+                                                         style="width:32px; height:32px; background:#fdd835; border:3px solid white; outline:1px solid #ddd;">
+                                                    </div>
+                                                </div>
+                                                <input type="hidden" id="edit_faculty">
+                                            </div>
+                                        </div>
+                                    </div><!-- end col-md-9 -->
+                                </div><!-- end row g-0 -->
+                            </div><!-- end tab-basic -->
+
+                            <!-- TAB 2: ติดต่อ & ที่อยู่ -->
+                            <div class="tab-pane fade" id="tab-contact" role="tabpanel">
+                                <h6 class="text-primary fw-bold border-bottom pb-2 mb-3"><i class="bi bi-telephone-fill me-2"></i>ช่องทางติดต่อ</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">เบอร์โทรศัพท์</label>
+                                        <input type="text" id="edit_phone" class="form-control rounded-3" placeholder="0XXXXXXXXX" maxlength="10"
+                                               oninput="this.value=this.value.replace(/\D/g,'')"
+                                               onblur="fixPhoneFormat(this)">
+                                        <div class="form-text text-muted small">ต้องขึ้นต้นด้วย 0 และมี 10 หลัก</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">อีเมลโรงเรียน</label>
+                                        <div class="input-group">
+                                            <input type="text" id="edit_email_prefix" class="form-control rounded-start-3" placeholder="รหัสนักเรียน">
+                                            <span class="input-group-text bg-light fw-bold text-muted">@chainatpit.ac.th</span>
+                                        </div>
+                                        <input type="hidden" id="edit_email">
+                                        <div class="form-text text-muted small">ระบบจะเติม @chainatpit.ac.th ให้อัตโนมัติ</div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Line ID</label>
+                                        <input type="text" id="edit_line_id" class="form-control rounded-3">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">Facebook</label>
+                                        <input type="text" id="edit_facebook" class="form-control rounded-3">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">สถานะที่พักอาศัย</label>
+                                        <select id="edit_address_status" class="form-select rounded-3">
+                                            <option value="">เลือก...</option>
+                                            <option value="อยู่กับบิดามารดา">อยู่กับบิดามารดา</option>
+                                            <option value="อยู่กับบิดา">อยู่กับบิดา</option>
+                                            <option value="อยู่กับมารดา">อยู่กับมารดา</option>
+                                            <option value="อยู่กับผู้ปกครอง">อยู่กับผู้ปกครอง</option>
+                                            <option value="อยู่หอพัก">อยู่หอพัก</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- ที่อยู่ตามทะเบียนบ้าน (PRIMARY) -->
+                                <h6 class="text-primary fw-bold border-bottom pb-2 mb-3 mt-4">
+                                    <i class="bi bi-file-earmark-text-fill me-2"></i>ที่อยู่ตามทะเบียนบ้าน
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-md-2"><label class="form-label small fw-bold">เลขที่บ้าน</label><input type="text" id="edit_reg_house_no" class="form-control rounded-3"></div>
+                                    <div class="col-md-2"><label class="form-label small fw-bold">หมู่</label><input type="text" id="edit_reg_moo" class="form-control rounded-3"></div>
+                                    <div class="col-md-4"><label class="form-label small fw-bold">ซอย / ถนน</label>
+                                        <div class="input-group">
+                                            <input type="text" id="edit_reg_soi" class="form-control" placeholder="ซอย">
+                                            <input type="text" id="edit_reg_road" class="form-control" placeholder="ถนน">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">จังหวัด</label>
+                                        <select id="edit_reg_province" class="form-select rounded-3" onchange="loadRegDistricts(this.value)">
+                                            <option value="">เลือกจังหวัด...</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">อำเภอ / เขต</label>
+                                        <select id="edit_reg_district" class="form-select rounded-3" onchange="loadRegSubdistricts(this.value)">
+                                            <option value="">เลือกอำเภอ...</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold">ตำบล / แขวง</label>
+                                        <select id="edit_reg_subdistrict" class="form-select rounded-3" onchange="setRegZipcode(this)">
+                                            <option value="">เลือกตำบล...</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <label class="form-label small fw-bold">รหัสไปรษณีย์</label>
+                                        <input type="text" id="edit_reg_zipcode" class="form-control rounded-3 bg-light" maxlength="5" readonly>
+                                    </div>
+                                </div>
+
+                                <!-- ที่อยู่ปัจจุบัน (with same-as checkbox) -->
+                                <div class="d-flex align-items-center gap-3 mt-4 mb-2">
+                                    <h6 class="text-primary fw-bold mb-0"><i class="bi bi-house-fill me-2"></i>ที่อยู่ปัจจุบัน</h6>
+                                    <div class="form-check ms-2 mb-0">
+                                        <input class="form-check-input" type="checkbox" id="sameAsRegAddr" onchange="toggleSameAddress(this)">
+                                        <label class="form-check-label small fw-bold text-success" for="sameAsRegAddr">
+                                            <i class="bi bi-check2-square me-1"></i>เหมือนกับที่อยู่ตามทะเบียนบ้าน
+                                        </label>
+                                    </div>
+                                </div>
+                                <div id="currAddrFields">
+                                    <div class="row g-3">
+                                        <div class="col-md-2"><label class="form-label small fw-bold">เลขที่บ้าน</label><input type="text" id="edit_curr_house_no" class="form-control rounded-3"></div>
+                                        <div class="col-md-2"><label class="form-label small fw-bold">หมู่</label><input type="text" id="edit_curr_moo" class="form-control rounded-3"></div>
+                                        <div class="col-md-4"><label class="form-label small fw-bold">ซอย / ถนน</label>
+                                            <div class="input-group">
+                                                <input type="text" id="edit_curr_soi" class="form-control" placeholder="ซอย">
+                                                <input type="text" id="edit_curr_road" class="form-control" placeholder="ถนน">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-bold">จังหวัด</label>
+                                            <select id="edit_curr_province" class="form-select rounded-3" onchange="loadCurrDistricts(this.value)">
+                                                <option value="">เลือกจังหวัด...</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-bold">อำเภอ / เขต</label>
+                                            <select id="edit_curr_district" class="form-select rounded-3" onchange="loadCurrSubdistricts(this.value)">
+                                                <option value="">เลือกอำเภอ...</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label small fw-bold">ตำบล / แขวง</label>
+                                            <select id="edit_curr_subdistrict" class="form-select rounded-3" onchange="setCurrZipcode(this)">
+                                                <option value="">เลือกตำบล...</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label class="form-label small fw-bold">รหัสไปรษณีย์</label>
+                                            <input type="text" id="edit_curr_zipcode" class="form-control rounded-3 bg-light" maxlength="5" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- TAB 3: สุขภาพ -->
+                            <div class="tab-pane fade" id="tab-health" role="tabpanel">
+                                <h6 class="text-danger fw-bold border-bottom pb-2 mb-3"><i class="bi bi-heart-pulse-fill me-2"></i>ข้อมูลสุขภาพและชีวมิติ</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <label class="form-label small fw-bold">หมู่เลือด</label>
+                                        <select id="edit_blood_group" class="form-select rounded-3">
+                                            <option value="-">-</option>
+                                            <option value="A">A</option>
+                                            <option value="B">B</option>
+                                            <option value="AB">AB</option>
+                                            <option value="O">O</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small fw-bold">น้ำหนัก (กก.)</label>
+                                        <input type="number" id="edit_weight" class="form-control rounded-3" step="0.1"
+                                               oninput="calcBMI()">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <label class="form-label small fw-bold">ส่วนสูง (ซม.)</label>
+                                        <input type="number" id="edit_height" class="form-control rounded-3" step="0.1"
+                                               oninput="calcBMI()">
+                                    </div>
+                                    <!-- BMI result card -->
+                                    <div class="col-md-3">
+                                        <label class="form-label small fw-bold">ค่า BMI (คำนวณอัตโนมัติ)</label>
+                                        <div id="bmiResultCard" class="rounded-3 border text-center p-2 bg-light">
+                                            <div class="fw-bold fs-4" id="bmiValue">-</div>
+                                            <div class="small" id="bmiCategory" style="font-size:0.75rem;"></div>
+                                        </div>
+                                    </div>
+                                    <!-- BMI visual bar -->
+                                    <div class="col-12" id="bmiBarWrap" style="display:none;">
+                                        <div class="progress rounded-pill" style="height: 12px;">
+                                            <div class="progress-bar rounded-pill" id="bmiBar" style="width:0%;transition:width 0.5s;"></div>
+                                        </div>
+                                        <div class="d-flex justify-content-between small text-muted mt-1">
+                                            <span>ผอม &lt;18.5</span>
+                                            <span>ปกติ 18.5-24.9</span>
+                                            <span>อ้วน ≥25</span>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold">โรคประจำตัว</label>
+                                        <input type="text" id="edit_congenital_disease" class="form-control rounded-3" placeholder="ระบุโรคประจำตัว (ถ้ามี)">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-danger">แพ้ยา <i class="bi bi-exclamation-circle-fill"></i></label>
+                                        <input type="text" id="edit_drug_allergies" class="form-control rounded-3 border-danger" placeholder="ระบุยาที่แพ้ (ถ้ามี)">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-warning">แพ้อาหาร <i class="bi bi-exclamation-circle-fill"></i></label>
+                                        <input type="text" id="edit_food_allergies" class="form-control rounded-3" placeholder="ระบุอาหารที่แพ้ (ถ้ามี)">
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <!-- TAB 4: ผู้ปกครอง -->
+                            <div class="tab-pane fade" id="tab-family" role="tabpanel">
+                                <h6 class="text-success fw-bold border-bottom pb-2 mb-3"><i class="bi bi-person-fill me-2"></i>ข้อมูลบิดา</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-2"><label class="form-label small fw-bold">คำนำหน้า</label><input type="text" id="edit_f_prefix" class="form-control rounded-3" placeholder="นาย"></div>
+                                    <div class="col-md-3"><label class="form-label small fw-bold">ชื่อ</label><input type="text" id="edit_f_first_name" class="form-control rounded-3"></div>
+                                    <div class="col-md-3"><label class="form-label small fw-bold">นามสกุล</label><input type="text" id="edit_f_last_name" class="form-control rounded-3"></div>
+                                    <div class="col-md-2"><label class="form-label small fw-bold">อายุ</label><input type="number" id="edit_f_age" class="form-control rounded-3"></div>
+                                    <div class="col-md-2"><label class="form-label small fw-bold">เบอร์โทร</label><input type="text" id="edit_f_phone" class="form-control rounded-3"></div>
+                                    <div class="col-md-4"><label class="form-label small fw-bold">อาชีพ</label><input type="text" id="edit_f_job" class="form-control rounded-3"></div>
+                                    <div class="col-md-4"><label class="form-label small fw-bold">รายได้ต่อเดือน (บาท)</label><input type="number" id="edit_f_income" class="form-control rounded-3"></div>
+                                </div>
+                                <h6 class="text-success fw-bold border-bottom pb-2 mb-3 mt-4"><i class="bi bi-person-fill me-2"></i>ข้อมูลมารดา</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-2"><label class="form-label small fw-bold">คำนำหน้า</label><input type="text" id="edit_m_prefix" class="form-control rounded-3" placeholder="นาง/นางสาว"></div>
+                                    <div class="col-md-3"><label class="form-label small fw-bold">ชื่อ</label><input type="text" id="edit_m_first_name" class="form-control rounded-3"></div>
+                                    <div class="col-md-3"><label class="form-label small fw-bold">นามสกุล</label><input type="text" id="edit_m_last_name" class="form-control rounded-3"></div>
+                                    <div class="col-md-2"><label class="form-label small fw-bold">อายุ</label><input type="number" id="edit_m_age" class="form-control rounded-3"></div>
+                                    <div class="col-md-2"><label class="form-label small fw-bold">เบอร์โทร</label><input type="text" id="edit_m_phone" class="form-control rounded-3"></div>
+                                    <div class="col-md-4"><label class="form-label small fw-bold">อาชีพ</label><input type="text" id="edit_m_job" class="form-control rounded-3"></div>
+                                    <div class="col-md-4"><label class="form-label small fw-bold">รายได้ต่อเดือน (บาท)</label><input type="number" id="edit_m_income" class="form-control rounded-3"></div>
+                                </div>
+                                <h6 class="text-success fw-bold border-bottom pb-2 mb-3 mt-4"><i class="bi bi-shield-fill-check me-2"></i>ผู้ปกครอง (กรณีไม่ใช่บิดา/มารดา)</h6>
+                                <div class="row g-3">
+                                    <div class="col-md-2"><label class="form-label small fw-bold">คำนำหน้า</label><input type="text" id="edit_g_prefix" class="form-control rounded-3"></div>
+                                    <div class="col-md-3"><label class="form-label small fw-bold">ชื่อ</label><input type="text" id="edit_g_first_name" class="form-control rounded-3"></div>
+                                    <div class="col-md-3"><label class="form-label small fw-bold">นามสกุล</label><input type="text" id="edit_g_last_name" class="form-control rounded-3"></div>
+                                    <div class="col-md-2"><label class="form-label small fw-bold">อายุ</label><input type="number" id="edit_g_age" class="form-control rounded-3"></div>
+                                    <div class="col-md-2"><label class="form-label small fw-bold">เบอร์โทร</label><input type="text" id="edit_g_phone" class="form-control rounded-3"></div>
+                                    <div class="col-md-4"><label class="form-label small fw-bold">ความสัมพันธ์</label><input type="text" id="edit_guardian_relation" class="form-control rounded-3" placeholder="เช่น ปู่/ย่า/ลุง/ป้า"></div>
+                                    <div class="col-md-4"><label class="form-label small fw-bold">อาชีพ</label><input type="text" id="edit_g_job" class="form-control rounded-3"></div>
+                                    <div class="col-md-4"><label class="form-label small fw-bold">รายได้ต่อเดือน (บาท)</label><input type="number" id="edit_g_income" class="form-control rounded-3"></div>
+                                </div>
+                            </div>
+
+                        </div><!-- end tab-content -->
+
+                        <div class="border-top px-4 py-3 d-flex justify-content-end gap-2 bg-light">
+                            <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">ยกเลิก</button>
+                            <button type="submit" class="btn btn-primary rounded-pill px-5 fw-bold shadow-sm">
+                                <i class="bi bi-save-fill me-2"></i>บันทึกการแก้ไข
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Profile Modal (Medical Record Style) -->
+    <div class="modal fade" id="profileModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content border-0 rounded-4 shadow-lg">
+                <div class="modal-header border-0 bg-white pt-4 px-4 pb-2">
+                    <div class="d-flex align-items-center justify-content-between w-100">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bg-navy p-2 rounded-3">
+                                <i class="bi bi-file-earmark-medical text-white fs-4"></i>
+                            </div>
+                            <div>
+                                <h5 class="modal-title fw-bold text-navy mb-0">STUDENT CLINICAL RECORD</h5>
+                                <p class="text-muted small mb-0">ทะเบียนประวัตินักเรียนอิเล็กทรอนิกส์ (CNP-EMS v2.0)</p>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                </div>
+                
+                <div class="modal-body p-0">
+                    <!-- Medical Header / Identification -->
+                    <div class="px-4 py-3 mb-1" style="background: linear-gradient(to right, #f8f9fa, #ffffff);">
+                        <div class="row align-items-center">
+                            <div class="col-auto">
+                                <div class="position-relative">
+                                    <img id="profilePhoto" src="" class="rounded-4 shadow-sm border border-3 border-white mr-3" width="130" height="150" style="object-fit: cover;">
+                                    <span class="position-absolute bottom-0 end-0 bg-success border border-2 border-white rounded-circle p-2 shadow-sm" title="Active Account"></span>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="badge bg-navy-subtle text-navy border border-navy-subtle mb-2 px-3 fw-bold">REG.ID: <span id="regNoHeader">000000</span></div>
+                                <h3 id="profileName" class="fw-bold text-navy mb-1 mt-1">กำลังโหลด...</h3>
+                                <p id="profileNickname" class="text-muted fw-semibold mb-2"></p>
+                                <div class="d-flex flex-wrap gap-3 mt-1">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <i class="bi bi-qr-code text-navy"></i>
+                                        <span class="small fw-bold text-muted">ID: <span id="profileIdLabel" class="text-navy"></span></span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2 border-start ps-3">
+                                        <i class="bi bi-droplet-fill text-danger"></i>
+                                        <span class="small fw-bold text-muted">BLOOD: <span id="profileBloodLabel" class="text-danger"></span></span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2 border-start ps-3">
+                                        <i class="bi bi-mortarboard-fill text-primary"></i>
+                                        <span class="small fw-bold text-muted">FACULTY: <span id="profileFacultyLabel" class="text-primary text-uppercase"></span></span>
+                                    </div>
+                                    <div class="d-flex align-items-center gap-2 border-start ps-3">
+                                        <i class="bi bi-door-open-fill text-success"></i>
+                                        <span id="profileRoomLabel" class="small fw-bold text-success"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2 d-none d-md-block text-center border-start">
+                                <img id="profileQR" src="" width="100" class="mb-1 opacity-75">
+                                <div style="font-size: 0.6rem;" class="text-muted fw-bold">SCANNED BY ADMIN</div>
+                                <div style="font-size: 0.6rem;" id="recordTimestamp" class="text-muted"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="px-4 py-4 bg-light">
+                        <div id="profileContent" class="vstack gap-4">
+                            <!-- Cards will be injected by JS -->
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-footer bg-white border-top border-light p-3">
+                    <button type="button" class="btn btn-light rounded-pill px-4 fw-bold text-muted" data-bs-dismiss="modal">ปิดหน้าต่าง</button>
+                    <button type="button" class="btn btn-outline-primary rounded-pill px-4 fw-bold" onclick="window.print()">
+                        <i class="bi bi-printer me-2"></i>พิมพ์/บันทึก PDF
+                    </button>
+                    <button type="button" id="editFromProfileBtn" class="btn btn-navy rounded-pill px-5 fw-bold shadow-sm">
+                        <i class="bi bi-pencil-square me-2"></i>แก้ไขข้อมูลนักเรียน
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div><script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="../public/js/main.js"></script>
+    <script>
+        function addStudent() {
+            Swal.fire({
+                title: 'กำลังพัฒนา',
+                text: 'ฟีเจอร์เพิ่มนักเรียนรายบุคคลกำลังถูกสร้างครับ โปรดใช้วิธีอัปโหลดไฟล์ในระหว่างนี้',
+                icon: 'info',
+                confirmButtonText: 'ตกลง'
+            });
+        }
+
+        let allStudents = [];
+        let filteredStudents = [];
+        let currentPage = 1;
+        let perPage = 9999; // Show all by default
+        let currentSortColumn = '';
+        let currentSortAsc = true;
+
+        function toggleSidebar() { document.getElementById('mainSidebar').classList.toggle('active'); }
+        
+        function openUploadModal() {
+            const modal = new bootstrap.Modal(document.getElementById('uploadModal'));
+            modal.show();
+        }
+
+        // Upload functionality
+        document.getElementById('uploadForm')?.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const formData = new FormData();
+            const fileInput = document.getElementById('excelFile');
+            
+            if (fileInput.files.length === 0) return;
+            
+            formData.append('excelFile', fileInput.files[0]);
+            
+            const btn = document.getElementById('btnUploadSubmit');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> กำลังประมวลผล...';
+            
+            try {
+                const res = await fetch('../api/admin/upload-students.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const text = await res.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    throw new Error('Server returned invalid JSON: ' + text.substring(0, 100));
+                }
+                
+                if (data.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('uploadModal')).hide();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'สำเร็จ!',
+                        text: data.message,
+                        confirmButtonText: 'ตกลง',
+                        customClass: { confirmButton: 'btn btn-primary rounded-pill px-4' }
+                    }).then(() => {
+                        loadStudents();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'เกิดข้อผิดพลาด',
+                        text: data.error || 'ไม่สามารถอัปโหลดข้อมูลได้',
+                        confirmButtonText: 'ตกลง',
+                        customClass: { confirmButton: 'btn btn-primary rounded-pill px-4' }
+                    });
+                }
+            } catch (err) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: err.message || 'ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้',
+                    confirmButtonText: 'ตกลง'
+                });
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        });
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = await checkAuth(['admin', 'teacher']);
+            window._currentUserRole = user?.role || 'admin'; // เก็บ role ไว้ใช้ lock ส่วนการศึกษา
+            
+            // Get preserve page if coming back from edit
+            const urlParams = new URLSearchParams(window.location.search);
+            const preservePage = urlParams.get('p') || 1;
+            
+            await loadStudents(preservePage);
+            
+            // Check for student ID in URL to auto-open modal
+            const studentId = urlParams.get('id');
+            if (studentId) {
+                editStudent(studentId);
+            }
+
+            // Check for room in URL to auto-filter (For teacher's sidebar link)
+            const roomParam = urlParams.get('room');
+            if (roomParam) {
+                const roomEl = document.getElementById('roomFilter');
+                if (roomEl) {
+                    // หากมีห้องใน URL ให้ล้างระดับชั้นออกก่อนเพื่อให้แสดงผลเฉพาะห้องนั้นจริงๆ
+                    document.getElementById('gradeFilter').value = "";
+                    
+                    // ตรวจสอบว่ามี Option นี้ไหม ถ้าไม่มีให้สร้างขึ้นมาชั่วคราว
+                    if (!Array.from(roomEl.options).some(opt => opt.value === roomParam)) {
+                        const newOpt = new Option(`ห้อง ${roomParam}`, roomParam, true, true);
+                        roomEl.add(newOpt);
+                    }
+                    
+                    roomEl.value = roomParam;
+                    const filterArea = document.getElementById('roomGradeFilters');
+                    const pageTitle = document.querySelector('h4.text-navy');
+                    if (filterArea) filterArea.classList.add('d-none');
+                    if (pageTitle) pageTitle.innerHTML = `<i class="bi bi-people-fill me-2 text-primary"></i> รายชื่อนักเรียนในที่ปรึกษา ห้อง ${roomParam}`;
+                    filterStudents(); 
+                    setViewMode('card'); 
+                }
+            }
+        });
+
+        function toggleGroup(groupId) {
+            const header = document.querySelector(`.group-header[data-group="${groupId}"]`);
+            const isCollapsed = header.classList.toggle('collapsed');
+            
+            const children = document.querySelectorAll(`.child-row[data-group="${groupId}"]`);
+            children.forEach(c => c.classList.toggle('collapsed', isCollapsed));
+
+            // Force hide nested students if parent grade is collapsed
+            if (isCollapsed) {
+                const subChildren = document.querySelectorAll(`.sub-child-row[data-parent-group="${groupId}"]`);
+                subChildren.forEach(sc => sc.classList.add('collapsed'));
+                const subHeaders = document.querySelectorAll(`.sub-group-header[data-group="${groupId}"]`);
+                subHeaders.forEach(sh => sh.classList.add('collapsed-sub'));
+            }
+        }
+
+        function toggleSubGroup(subGroupId, event) {
+            if (event) event.stopPropagation();
+            const header = document.querySelector(`.sub-group-header[data-subgroup="${subGroupId}"]`);
+            const children = document.querySelectorAll(`.sub-child-row[data-subgroup="${subGroupId}"]`);
+            const isCollapsed = header.classList.toggle('collapsed-sub');
+            children.forEach(c => c.classList.toggle('collapsed', isCollapsed));
+        }
+
+        async function loadStudents(preservePage) {
+            try {
+                const res = await fetch('../api/admin/students.php');
+                const data = await res.json();
+                if ((data.students || data.data)) {
+                    allStudents = (data.students || data.data) || [];
+                    filteredStudents = [...allStudents];
+                    currentPage = 1; // Always reset to 1 for "Show All" view
+                    renderTable();
+                }
+            } catch (err) {
+                console.error('Error loading students:', err);
+                document.getElementById('studentTableBody').innerHTML = '<tr><td colspan="6" class="text-center py-5 text-danger">เกิดข้อผิดพลาดในการโหลดข้อมูล: ' + err.message + '</td></tr>';
+            }
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('studentTableBody');
+            const groupBy = document.getElementById('groupBySelect').value;
+            const total = filteredStudents.length;
+            const totalPages = Math.max(1, Math.ceil(total / perPage));
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const start = (currentPage - 1) * perPage;
+            const pageData = filteredStudents.slice(start, start + perPage);
+
+            tbody.innerHTML = '';
+            const grid = document.getElementById('studentCardGrid');
+            if (grid) grid.innerHTML = '';
+
+            if (pageData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-5 text-muted">ไม่พบข้อมูลนักเรียน</td></tr>';
+                if (grid) grid.innerHTML = '<div class="col-12 text-center py-5 text-muted">ไม่พบข้อมูลนักเรียน</div>';
+                return;
+            }
+
+            if (!groupBy) {
+                // Standard Rendering
+                pageData.forEach((s, index) => {
+                    tbody.appendChild(createStudentRow(s, start + index + 1));
+                    if (grid) grid.appendChild(createStudentCard(s));
+                });
+            } else if (groupBy === 'grade_level') {
+                // Nested Grouping (Grade -> Room)
+                const grades = {};
+                pageData.forEach(s => {
+                    const g = s.grade_level || 'ไม่ระบุ';
+                    if (!grades[g]) grades[g] = [];
+                    grades[g].push(s);
+                });
+
+                Object.keys(grades).sort().forEach((gradeName, gIdx) => {
+                    const gradeItems = grades[gradeName];
+                    const groupId = `grade_${gIdx}`;
+                    
+                    const headerTr = document.createElement('tr');
+                    headerTr.className = 'group-header collapsed';
+                    headerTr.dataset.group = groupId;
+                    headerTr.onclick = () => toggleGroup(groupId);
+                    
+                    headerTr.innerHTML = `
+                        <td colspan="6" class="py-3 ps-4 bg-light">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center gap-3">
+                                    <i class="bi bi-chevron-down expando-icon text-muted"></i>
+                                    <span class="fw-bold text-navy">ระดับชั้น ${gradeName}</span>
+                                    <span class="badge bg-primary rounded-pill" style="font-size: 0.65rem;">${gradeItems.length} คน</span>
+                                </div>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(headerTr);
+
+                    if (grid) {
+                        const gridHeader = document.createElement('div');
+                        gridHeader.className = 'col-12 group-header collapsed mt-3 mb-1';
+                        gridHeader.dataset.group = groupId;
+                        gridHeader.onclick = () => toggleGroup(groupId);
+                        gridHeader.innerHTML = `
+                            <div class="d-flex align-items-center gap-3 p-3 bg-primary bg-opacity-10 rounded-4 border border-primary border-opacity-25" style="cursor: pointer;">
+                                <i class="bi bi-chevron-down expando-icon text-primary fs-5"></i>
+                                <h4 class="fw-bold text-primary mb-0">ระดับชั้น ${gradeName}</h4>
+                                <span class="badge bg-primary rounded-pill px-3 py-2 ms-auto">${gradeItems.length} คน</span>
+                            </div>
+                        `;
+                        grid.appendChild(gridHeader);
+                    }
+
+                    // Sub-group by Room
+                    const rooms = {};
+                    gradeItems.forEach(s => {
+                        const r = s.room || 'ไม่ระบุ';
+                        if (!rooms[r]) rooms[r] = [];
+                        rooms[r].push(s);
+                    });
+
+                    Object.keys(rooms).sort((a,b) => parseInt(a)-parseInt(b)).forEach((roomName, rIdx) => {
+                        const roomItems = rooms[roomName];
+                        const subGroupId = `${groupId}_room_${rIdx}`;
+                        
+                        const subHeaderTr = document.createElement('tr');
+                        subHeaderTr.className = 'child-row sub-group-header collapsed collapsed-sub'; // Initially hidden & collapsed
+                        subHeaderTr.dataset.group = groupId;
+                        subHeaderTr.dataset.subgroup = subGroupId;
+                        subHeaderTr.onclick = (e) => toggleSubGroup(subGroupId, e);
+                        
+                        subHeaderTr.innerHTML = `
+                            <td colspan="6" class="py-2 ps-5" style="background-color: #fdfdfd; cursor: pointer;">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <i class="bi bi-chevron-down expando-icon text-muted"></i>
+                                        <span class="fw-bold text-secondary">ห้อง ${roomName}</span>
+                                        <span class="badge bg-secondary rounded-pill" style="font-size: 0.65rem;">${roomItems.length} คน</span>
+                                    </div>
+                                </div>
+                            </td>
+                        `;
+                        tbody.appendChild(subHeaderTr);
+
+                        if (grid) {
+                            const gridSubHeader = document.createElement('div');
+                            gridSubHeader.className = 'col-12 child-row sub-group-header collapsed collapsed-sub mt-2 mb-2 px-md-5';
+                            gridSubHeader.dataset.group = groupId;
+                            gridSubHeader.dataset.subgroup = subGroupId;
+                            gridSubHeader.onclick = (e) => toggleSubGroup(subGroupId, e);
+                            gridSubHeader.innerHTML = `
+                                <div class="d-flex align-items-center gap-3 p-2 ps-4 bg-white rounded-4 border shadow-sm" style="cursor: pointer; border-left: 5px solid #6c757d !important;">
+                                    <i class="bi bi-chevron-down expando-icon text-muted" style="transition: transform 0.3s;"></i>
+                                    <h5 class="fw-bold text-secondary mb-0">ห้อง ${roomName}</h5>
+                                    <span class="badge bg-secondary rounded-pill px-3 py-1 ms-auto">${roomItems.length} คน</span>
+                                </div>
+                            `;
+                            grid.appendChild(gridSubHeader);
+                        }
+
+                        // Sort students by number in class
+                        let groupRunningIndex = 1;
+                        roomItems.sort((a,b) => parseInt(a.number_in_class||999) - parseInt(b.number_in_class||999)).forEach(s => {
+                            const tr = createStudentRow(s, groupRunningIndex++);
+                            tr.classList.add('sub-child-row', 'collapsed'); // Initially hidden
+                            tr.dataset.parentGroup = groupId;
+                            tr.dataset.subgroup = subGroupId;
+                            tbody.appendChild(tr);
+
+                            if (grid) {
+                                const card = createStudentCard(s);
+                                card.classList.add('sub-child-row', 'collapsed'); // Initially hidden
+                                card.dataset.parentGroup = groupId;
+                                card.dataset.subgroup = subGroupId;
+                                grid.appendChild(card);
+                            }
+                        });
+                    });
+                });
+            } else {
+                // Flat Grouping (e.g. by Room)
+                const groups = {};
+                pageData.forEach(s => {
+                    const groupVal = s[groupBy] || 'ไม่ระบุ';
+                    if (!groups[groupVal]) groups[groupVal] = [];
+                    groups[groupVal].push(s);
+                });
+
+                Object.keys(groups).sort((a,b) => parseInt(a)-parseInt(b)).forEach((groupName, gIdx) => {
+                    const groupItems = groups[groupName];
+                    const groupId = `group_${gIdx}`;
+                    
+                    const headerTr = document.createElement('tr');
+                    headerTr.className = 'group-header collapsed'; // Ensure collapsed class
+                    headerTr.dataset.group = groupId;
+                    headerTr.onclick = () => toggleGroup(groupId);
+                    
+                    headerTr.innerHTML = `
+                        <td colspan="6" class="py-3 ps-4 bg-light">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex align-items-center gap-3">
+                                    <i class="bi bi-chevron-down expando-icon text-muted"></i>
+                                    <span class="fw-bold text-navy">ห้อง ${groupName}</span>
+                                    <span class="badge bg-primary rounded-pill" style="font-size: 0.65rem;">${groupItems.length} คน</span>
+                                </div>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(headerTr);
+
+                    if (grid) {
+                        const gridHeader = document.createElement('div');
+                        gridHeader.className = 'col-12 group-header collapsed mt-3 mb-1';
+                        gridHeader.dataset.group = groupId;
+                        gridHeader.onclick = () => toggleGroup(groupId);
+                        gridHeader.innerHTML = `
+                            <div class="d-flex align-items-center gap-3 p-3 bg-primary bg-opacity-10 rounded-4 border border-primary border-opacity-25" style="cursor: pointer;">
+                                <i class="bi bi-chevron-down expando-icon text-primary fs-5"></i>
+                                <h4 class="fw-bold text-primary mb-0">ห้อง ${groupName}</h4>
+                                <span class="badge bg-primary rounded-pill px-3 py-2 ms-auto">${groupItems.length} คน</span>
+                            </div>
+                        `;
+                        grid.appendChild(gridHeader);
+                    }
+
+                    let groupRunningIndex = 1;
+                    groupItems.sort((a,b) => parseInt(a.number_in_class||999) - parseInt(b.number_in_class||999)).forEach(s => {
+                        const tr = createStudentRow(s, groupRunningIndex++);
+                        tr.classList.add('child-row', 'collapsed'); // Ensure collapsed class
+                        tr.dataset.group = groupId;
+                        tbody.appendChild(tr);
+
+                        if (grid) {
+                            const card = createStudentCard(s);
+                            card.classList.add('child-row', 'collapsed');
+                            card.dataset.group = groupId;
+                            grid.appendChild(card);
+                        }
+                    });
+                });
+            }
+
+            const end = Math.min(start + perPage, total);
+            const info = document.getElementById('paginationInfo');
+            if (info) info.textContent = `แสดง ${total === 0 ? 0 : start + 1}–${end} จาก ${total} รายการ`;
+            renderPaginationControls(totalPages);
+        }
+
+        function createStudentRow(s, index) {
+            const tr = document.createElement('tr');
+            tr.className = 'border-bottom-0 hover-bg-light transition-all';
+            
+            const ageInfo = calculateAge(s.birth_date);
+            const ageFullStr = ageInfo.full;
+            const dayOfBirth = ageInfo.day;
+            const currentRoom = s.room ? s.room.toString().padStart(3, '0') : '???';
+
+            tr.innerHTML = `
+                <td class="text-center fw-bold text-navy">${s.number_in_class || '-'}</td>
+                <td>
+                    <div class="d-flex align-items-center gap-3">
+                        <img src="${s.photo ? '../'+s.photo : 'https://ui-avatars.com/api/?name='+encodeURIComponent(s.first_name_th)+'&background=random'}" class="rounded-circle border border-2 border-white shadow-sm" width="45" height="45" style="object-fit:cover;">
+                        <div>
+                            <a href="javascript:void(0)" onclick="viewStudent(${s.id})" class="fw-bold text-dark d-block fs-5 mb-0 text-decoration-none hover-primary-text">
+                                ${s.prefix || ''}${s.first_name_th} ${s.last_name_th}
+                            </a>
+                            <div class="small text-muted d-flex align-items-center flex-wrap gap-3 mt-1">
+                                <span class="d-flex align-items-center gap-1"><i class="bi bi-person-badge opacity-75"></i> ${s.student_id}</span>
+                                <span class="text-muted opacity-25">|</span>
+                                <span class="d-flex align-items-center gap-1"><i class="bi bi-stack opacity-75"></i> ${currentRoom} (เลขที่ ${s.number_in_class || '-'})</span>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+                <td class="text-center text-muted">
+                    ${s.nickname || '-'}
+                </td>
+                <td class="text-center">
+                    ${getHouseBadge(s.faculty)}
+                </td>
+                <td class="text-center">
+                    <div class="fw-bold text-dark small" style="white-space: nowrap;">${ageFullStr}</div>
+                    <div class="text-primary small fw-semibold" style="font-size: 0.7rem;">${dayOfBirth}</div>
+                </td>
+                <td class="text-center">
+                    <div class="btn-group shadow-sm" role="group">
+                        <button class="btn btn-warning text-white btn-sm hover-scale" onclick="editStudent(${s.id})" title="แก้ไข">
+                            <i class="bi bi-pencil-square"></i>
+                        </button>
+                        <button class="btn btn-danger text-white btn-sm hover-scale" onclick="deleteStudent(${s.id})" title="ลบ">
+                            <i class="bi bi-trash-fill"></i>
+                        </button>
+                    </div>
+                </td>
+            `;
+            return tr;
+        }
+
+        function createStudentCard(s) {
+            const ageInfo = calculateAge(s.birth_date);
+            const card = document.createElement('div');
+            card.className = 'col';
+            const isComplete = s.birth_date && s.nickname && s.id_card;
+
+            card.innerHTML = `
+                <div class="student-profile-card position-relative bg-white rounded-5 shadow-sm border-0 transition-all h-100 overflow-hidden" onclick="viewStudent(${s.id})">
+                    <div class="p-3 h-100 d-flex flex-column">
+                        <div class="portrait-wrapper mb-4">
+                            <img src="${s.photo ? '../'+s.photo : 'https://ui-avatars.com/api/?name='+encodeURIComponent(s.first_name_th)+'&background=random'}" 
+                                 class="w-100 student-img-dynamic shadow-sm border border-light" style="aspect-ratio: 1/1.1; object-fit: cover; object-position: top; border-radius: 2.5rem;">
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <h4 class="fw-bold text-dark mb-0" style="letter-spacing: -0.01em; font-size: 1.15rem;">${s.prefix || ''}${s.first_name_th} ${s.last_name_th}</h4>
+                                ${isComplete ? `<div class="verified-badge bg-success rounded-circle d-flex align-items-center justify-content-center" style="width:20px; height:20px;"><i class="bi bi-check text-white" style="font-size: 14px; -webkit-text-stroke: 1px;"></i></div>` : ''}
+                            </div>
+                            <div class="text-secondary small mb-3" style="line-height: 1.4;">
+                                <p class="fw-bold text-uppercase text-muted mb-1" style="font-size: 0.75rem;">${s.first_name_en || ''} ${s.last_name_en || ''}</p>
+                                <p class="mb-0 opacity-75">เลขที่ ${s.number_in_class || '-'} • ห้อง ${s.room || '??'} • ${s.student_id}</p>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center justify-content-between mt-auto pt-3 border-top border-light border-opacity-50">
+                            <div class="d-flex align-items-center gap-3 text-muted">
+                                <div class="d-flex align-items-center gap-1">
+                                    <i class="bi bi-person-heart fs-6"></i>
+                                    <span class="fw-bold text-dark small">${s.nickname || '-'}</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-1">
+                                    <i class="bi bi-cake fs-6"></i>
+                                    <span class="fw-bold text-dark small">${ageInfo.y} ปี</span>
+                                </div>
+                            </div>
+                            <button class="btn btn-follow-style rounded-pill px-3 py-1 fw-bold transition-all shadow-sm" onclick="event.stopPropagation(); editStudent(${s.id})">แก้ไข +</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            return card;
+        }
+
+        function renderPaginationControls(totalPages) {
+            const ul = document.getElementById('paginationControls');
+            if (!ul) return;
+            ul.innerHTML = '';
+            
+            const prevLi = document.createElement('li');
+            prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+            prevLi.innerHTML = `<a class="page-link border-0 rounded-circle" href="#" onclick="goToPage(${currentPage - 1});return false;"><</a>`;
+            ul.appendChild(prevLi);
+
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === 1 || i === totalPages || (i >= currentPage - 1 && i <= currentPage + 1)) {
+                    const li = document.createElement('li');
+                    li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                    li.innerHTML = `<a class="page-link border-0 rounded-circle ms-1" href="#" onclick="goToPage(${i});return false;">${i}</a>`;
+                    ul.appendChild(li);
+                } else if (i === currentPage - 2 || i === currentPage + 2) {
+                    const li = document.createElement('li');
+                    li.className = 'page-item disabled'; li.innerHTML = '<span class="page-link border-0">...</span>';
+                    ul.appendChild(li);
+                }
+            }
+
+            const nextLi = document.createElement('li');
+            nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+            nextLi.innerHTML = `<a class="page-link border-0 rounded-circle ms-1" href="#" onclick="goToPage(${currentPage + 1});return false;">></a>`;
+            ul.appendChild(nextLi);
+        }
+
+        function goToPage(p) {
+            const totalPages = Math.ceil(filteredStudents.length / perPage);
+            currentPage = Math.max(1, Math.min(p, totalPages));
+            renderTable();
+        }
+
+        function changePerPage(val) {
+            perPage = parseInt(val);
+            currentPage = 1;
+            renderTable();
+        }
+
+        function sortTable(column) {
+            if (currentSortColumn === column) {
+                currentSortAsc = !currentSortAsc;
+            } else {
+                currentSortColumn = column;
+                currentSortAsc = true;
+            }
+
+            filteredStudents.sort((a, b) => {
+                let valA = a[column] || '';
+                let valB = b[column] || '';
+                
+                // Compare strings, falling back to primitive comparison
+                if (typeof valA === 'string' && typeof valB === 'string') {
+                    return currentSortAsc ? valA.localeCompare(valB, 'th') : valB.localeCompare(valA, 'th');
+                }
+                
+                if (valA < valB) return currentSortAsc ? -1 : 1;
+                if (valA > valB) return currentSortAsc ? 1 : -1;
+                return 0;
+            });
+            
+            currentPage = 1;
+            renderTable();
+        }
+
+        function filterStudents() {
+            const search = document.getElementById('studentSearch').value.toLowerCase();
+            const grade = document.getElementById('gradeFilter').value;
+            const roomNum = document.getElementById('roomFilter').value;
+            
+            // สร้าง Map สำหรับแปลง ม. เป็นคำเต็มเพื่อใช้ในการค้นหา
+            const gradeMap = {
+                'ม.1': 'มัธยมศึกษาปีที่ 1',
+                'ม.2': 'มัธยมศึกษาปีที่ 2',
+                'ม.3': 'มัธยมศึกษาปีที่ 3',
+                'ม.4': 'มัธยมศึกษาปีที่ 4',
+                'ม.5': 'มัธยมศึกษาปีที่ 5',
+                'ม.6': 'มัธยมศึกษาปีที่ 6'
+            };
+            const fullGrade = gradeMap[grade] || grade;
+
+            filteredStudents = allStudents.filter(s => {
+                const searchableText = Object.values(s).filter(v => v !== null && typeof v !== 'object').join(' ').toLowerCase(); // [
+                /* s.student_id,
+                    s.prefix,
+                    s.first_name_th,
+                    s.last_name_th,
+                    s.full_name_th,
+                    s.nickname,
+                    s.grade_level,
+                    s.room,
+                    s.number_in_class,
+                    s.faculty
+                ].join(' ').toLowerCase(); */
+                
+                const matchesSearch = searchableText.includes(search) || 
+                                     (search.includes('ม.') && searchableText.includes(search.replace('ม.', 'มัธยมศึกษาปีที่ '))) ||
+                                     (search.includes('มัธยมศึกษาปีที่') && searchableText.includes(search.replace('มัธยมศึกษาปีที่ ', 'ม.')));
+
+                const matchesLevel = grade === "" || 
+                                    (s.grade_level && (s.grade_level.includes(grade) || s.grade_level.includes(fullGrade)));
+                
+                const matchesRoom = roomNum === "" || (s.room && (s.room.toString() === roomNum || s.room.toString().padStart(3, '0') === roomNum));
+                
+                return matchesSearch && matchesLevel && matchesRoom;
+            });
+            
+            // Re-apply sort if active
+            if(currentSortColumn) {
+               currentSortAsc = !currentSortAsc; 
+               sortTable(currentSortColumn);
+            } else {
+               currentPage = 1;
+               renderTable();
+            }
+        }
+
+        function resetFilters() {
+            document.getElementById('studentSearch').value = '';
+            document.getElementById('gradeFilter').value = '';
+            document.getElementById('roomFilter').value = '';
+            filterStudents();
+        }
+
+        function viewStudent(id) {
+            const s = allStudents.find(s => s.id == id);
+            if (!s) return;
+
+            // Header Info
+            document.getElementById('profilePhoto').src = s.photo ? '../'+s.photo : 'https://ui-avatars.com/api/?name='+encodeURIComponent(s.first_name_th)+'&background=f0f0f0&color=1e3c72&bold=true';
+            document.getElementById('profileName').textContent = `${s.prefix || ''}${s.first_name_th} ${s.last_name_th}`;
+            document.getElementById('profileNickname').textContent = s.nickname ? `ชื่อเล่น: ${s.nickname}` : '';
+            document.getElementById('profileIdLabel').textContent = s.student_id;
+            document.getElementById('regNoHeader').textContent = s.id.toString().padStart(6, '0');
+            document.getElementById('profileBloodLabel').textContent = s.blood_group || '-';
+            document.getElementById('profileFacultyLabel').textContent = s.faculty || 'ไม่ระบุคณะ';
+            document.getElementById('profileRoomLabel').textContent = `ห้อง ${s.room || '???'}`;
+            document.getElementById('recordTimestamp').textContent = new Date().toLocaleString('th-TH');
+            
+            // Generate Actual QR Code
+            try {
+                if (typeof QRious !== 'undefined') {
+                    const qr = new QRious({ value: s.student_id || '-', size: 150 });
+                    document.getElementById('profileQR').src = qr.toDataURL();
+                } else {
+                    document.getElementById('profileQR').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(s.student_id || '-')}`;
+                }
+            } catch (e) {
+                document.getElementById('profileQR').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(s.student_id || '-')}`;
+            }
+
+            document.getElementById('editFromProfileBtn').onclick = () => {
+                bootstrap.Modal.getInstance(document.getElementById('profileModal')).hide();
+                editStudent(s.id);
+            };
+
+            const container = document.getElementById('profileContent');
+            
+            // Generate Medical Record Style Content
+            const categories = [
+                {
+                    title: 'ข้อมูลพื้นฐาน (PRIMARY IDENTIFICATION)',
+                    icon: 'bi-info-square-fill',
+                    items: [
+                        { label: 'รหัสนักเรียน', value: s.student_id },
+                        { label: 'ชื่อ-นามสกุล (ไทย)', value: `${s.prefix || ''}${s.first_name_th} ${s.last_name_th}` },
+                        { label: 'NAME-SURNAME (EN)', value: `${s.first_name_en || '-'} ${s.last_name_en || ''}` },
+                        { label: 'เลขบัตรประชาชน', value: s.id_card },
+                        { label: 'วันเกิด (B.E.)', value: s.birth_date ? new Date(s.birth_date).toLocaleDateString('th-TH', { year:'numeric', month:'long', day:'numeric' }) : '-' },
+                        { label: 'สัญชาติ/เชื้อชาติ/ศาสนา', value: `${s.nationality || '-'}/${s.ethnicity || '-'}/${s.religion || '-'}` }
+                    ]
+                },
+                {
+                    title: 'ช่องทางติดต่อ (COMMUNICATION)',
+                    icon: 'bi-telephone-fill',
+                    items: [
+                        { label: 'เบอร์โทรศัพท์', value: s.phone },
+                        { label: 'อีเมล (E-MAIL)', value: s.email },
+                        { label: 'โซเชียลมีเดีย (SOCIALS)', value: `${s.line_id || '-'}/${s.facebook || '-'}` }
+                    ]
+                },
+                {
+                    title: 'ที่พักอาศัย (RESIDENCE ADDRESS)',
+                    icon: 'bi-house-fill',
+                    items: [
+                        { label: 'สถานะที่พัก', value: s.address_status },
+                        { label: 'ที่อยู่ปัจจุบัน', value: `${s.curr_house_no || ''} ม.${s.curr_moo || '-'} ต.${s.curr_subdistrict || ''} อ.${s.curr_district || ''} จ.${s.curr_province || ''}` },
+                        { label: 'ที่อยู่ตามทะเบียนบ้าน', value: `${s.reg_house_no || ''} ม.${s.reg_moo || '-'} ต.${s.reg_subdistrict || ''} อ.${s.reg_district || ''} จ.${s.reg_province || ''}` }
+                    ]
+                },
+                {
+                    title: 'ข้อมูลสุขภาพ (HEALTH & BIOMETRICS)',
+                    icon: 'bi-heart-pulse-fill',
+                    items: [
+                        { label: 'หมู่เลือด', value: s.blood_group },
+                        { label: 'น้ำหนัก / ส่วนสูง', value: `${s.weight || '-'} KG / ${s.height || '-'} CM` },
+                        { label: 'แพ้ยา / แพ้อาหาร', value: `<span class="text-danger fw-bold">${s.drug_allergies || 'ไม่มี'}</span> / ${s.food_allergies || 'ไม่มี'}` },
+                        { label: 'โรคประจำตัว', value: s.congenital_disease }
+                    ]
+                },
+                {
+                    title: 'ผู้ปกครอง (FAMILY & EMERGENCY)',
+                    icon: 'bi-people-fill',
+                    items: [
+                        { label: 'ชื่อบิดา', value: `${s.f_prefix || ''}${s.f_first_name || '-'} ${s.f_last_name || ''} (โทร: ${s.f_phone || '-'})` },
+                        { label: 'ชื่อมารดา', value: `${s.m_prefix || ''}${s.m_first_name || '-'} ${s.m_last_name || ''} (โทร: ${s.m_phone || '-'})` },
+                        { label: 'ผู้ปกครอง', value: `${s.g_prefix || ''}${s.g_first_name || '-'} ${s.g_last_name || ''} (สัมพันธ์เป็น: ${s.guardian_relation || '-'})` }
+                    ]
+                }
+            ];
+
+            let html = '';
+            categories.forEach(cat => {
+                html += `
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-2">
+                        <div class="card-header border-0 bg-white pt-3 pb-0 ps-4">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="bg-navy p-2 rounded-3 d-flex align-items-center justify-content-center" style="width:30px; height:30px;">
+                                    <i class="bi ${cat.icon} text-white small"></i>
+                                </span>
+                                <h6 class="mb-0 fw-bold text-navy text-uppercase tracking-tighter" style="font-size: 0.85rem;">${cat.title}</h6>
+                            </div>
+                        </div>
+                        <div class="card-body px-4 pb-4 pt-3">
+                            <div class="row row-cols-1 row-cols-md-2 gx-xl-5 gy-2">
+                                ${cat.items.map(i => `
+                                    <div class="col py-2 border-bottom border-light">
+                                        <div class="row align-items-center">
+                                            <div class="col-5">
+                                                <span class="small text-muted fw-bold text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.05em;">${i.label}</span>
+                                            </div>
+                                            <div class="col-7">
+                                                <span class="small fw-semibold text-dark">${i.value || '-'}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            // Add decorative watermark
+            html += `
+                <div class="mt-5 pt-4 text-center">
+                    <div class="border-top pt-3 d-inline-block px-5">
+                        <span class="text-uppercase text-muted opacity-25 fw-bold" style="font-size: 2rem; letter-spacing: 12px; transform: rotate(-5deg); display: block;">CONFIDENTIAL</span>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+
+            const modal = new bootstrap.Modal(document.getElementById('profileModal'));
+            modal.show();
+        }
+
+        function editStudent(id) {
+            const s = allStudents.find(s => s.id == id);
+            if (!s) return;
+
+            // Reset to first tab
+            const firstTab = document.getElementById('tab-basic-tab');
+            if (firstTab) bootstrap.Tab.getOrCreateInstance(firstTab).show();
+
+            // Subtitle
+            document.getElementById('editModalSubtitle').textContent = `${s.prefix || ''}${s.first_name_th} ${s.last_name_th} | ${s.student_id}`;
+
+            // Photo preview — fallback to school logo
+            const photoPreview = document.getElementById('studentPhotoPreview');
+            photoPreview.src = s.photo ? `../${s.photo}` : '../public/img/logo.png';
+            document.getElementById('studentPhotoInput').value = '';
+
+            // Student ID badge below photo
+            document.getElementById('photoStudentIdBadge').textContent = s.student_id || '-';;
+
+            // TAB 1: ข้อมูลพื้นฐาน
+            document.getElementById('edit_id').value = s.id;
+            document.getElementById('edit_student_id').value = s.student_id || '';
+            document.getElementById('edit_prefix').value = s.prefix || 'นาย';
+            document.getElementById('edit_first_name_th').value = s.first_name_th || '';
+            document.getElementById('edit_last_name_th').value = s.last_name_th || '';
+            document.getElementById('edit_first_name_en').value = s.first_name_en || '';
+            document.getElementById('edit_last_name_en').value = s.last_name_en || '';
+            document.getElementById('edit_nickname').value = s.nickname || '';
+            document.getElementById('edit_id_card').value = s.id_card || '';
+            // Birth date: convert YYYY-MM-DD → BE display
+            if (s.birth_date) {
+                const [y,m,d] = s.birth_date.split('-');
+                document.getElementById('edit_birth_date_be').value = `${d}/${m}/${parseInt(y)+543}`;
+                document.getElementById('edit_birth_date').value = s.birth_date;
+                setTimeout(calcAgeFromBE, 50);
+            } else {
+                document.getElementById('edit_birth_date_be').value = '';
+                document.getElementById('edit_birth_date').value = '';
+                document.getElementById('birthInfoBox').classList.add('d-none');
+            };
+            document.getElementById('edit_ethnicity').value = s.ethnicity || 'ไทย';
+            document.getElementById('edit_nationality').value = s.nationality || 'ไทย';
+            document.getElementById('edit_religion').value = s.religion || 'พุทธ';
+            document.getElementById('edit_grade_level').value = s.grade_level || '';
+            document.getElementById('edit_room').value = s.room || '';
+            document.getElementById('edit_number_in_class').value = s.number_in_class || '';
+            // House picker
+            selectHouseByValue(s.faculty || '');
+
+            // Education lock: disable if not admin/teacher
+            const eduInputs = ['edit_grade_level','edit_room','edit_number_in_class'];
+            const isPrivileged = (window._currentUserRole === 'admin' || window._currentUserRole === 'teacher');
+            eduInputs.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.disabled = !isPrivileged;
+            });
+            document.getElementById('housePicker').style.pointerEvents = isPrivileged ? 'auto' : 'none';
+            document.getElementById('housePicker').style.opacity = isPrivileged ? '1' : '0.5';
+            const lockBadge = document.getElementById('eduLockBadge');
+            if (lockBadge) lockBadge.style.display = isPrivileged ? 'none' : '';
+
+            // BMI reset
+            calcBMI();
+
+            // TAB 2: ติดต่อ & ที่อยู่
+            document.getElementById('edit_phone').value = s.phone || '';
+            // Email: split prefix from @chainatpit.ac.th
+            const emailFull = s.email || '';
+            const emailPrefix = emailFull.replace('@chainatpit.ac.th','');
+            document.getElementById('edit_email_prefix').value = emailPrefix;
+            document.getElementById('edit_email').value = emailFull;
+            document.getElementById('edit_line_id').value = s.line_id || '';
+            document.getElementById('edit_facebook').value = s.facebook || '';
+            document.getElementById('edit_address_status').value = s.address_status || '';
+            // Address: registration first (with cascading selects)
+            document.getElementById('edit_reg_house_no').value = s.reg_house_no || '';
+            document.getElementById('edit_reg_moo').value = s.reg_moo || '';
+            document.getElementById('edit_reg_soi').value = s.reg_soi || '';
+            document.getElementById('edit_reg_road').value = s.reg_road || '';
+            document.getElementById('edit_reg_zipcode').value = s.reg_zipcode || '';
+
+            // Load cascading for registration address
+            loadRegDistricts(null, s.reg_province, s.reg_district, s.reg_subdistrict);
+
+            // Current address
+            document.getElementById('edit_curr_house_no').value = s.curr_house_no || '';
+            document.getElementById('edit_curr_moo').value = s.curr_moo || '';
+            document.getElementById('edit_curr_soi').value = s.curr_soi || '';
+            document.getElementById('edit_curr_road').value = s.curr_road || '';
+            document.getElementById('edit_curr_zipcode').value = s.curr_zipcode || '';
+
+            // Check if same address
+            const sameAddr = s.curr_province === s.reg_province && s.curr_district === s.reg_district
+                             && s.curr_subdistrict === s.reg_subdistrict && s.curr_house_no === s.reg_house_no;
+            document.getElementById('sameAsRegAddr').checked = sameAddr;
+            document.getElementById('currAddrFields').style.display = sameAddr ? 'none' : '';
+            if (!sameAddr) {
+                loadCurrDistricts(null, s.curr_province, s.curr_district, s.curr_subdistrict);
+            }
+
+            // TAB 3: สุขภาพ
+            document.getElementById('edit_blood_group').value = s.blood_group || '-';
+            document.getElementById('edit_weight').value = s.weight || '';
+            document.getElementById('edit_height').value = s.height || '';
+            document.getElementById('edit_congenital_disease').value = s.congenital_disease || '';
+            document.getElementById('edit_drug_allergies').value = s.drug_allergies || '';
+            document.getElementById('edit_food_allergies').value = s.food_allergies || '';
+
+            // TAB 4: ผู้ปกครอง
+            document.getElementById('edit_f_prefix').value = s.f_prefix || '';
+            document.getElementById('edit_f_first_name').value = s.f_first_name || '';
+            document.getElementById('edit_f_last_name').value = s.f_last_name || '';
+            document.getElementById('edit_f_age').value = s.f_age || '';
+            document.getElementById('edit_f_phone').value = s.f_phone || '';
+            document.getElementById('edit_f_job').value = s.f_job || '';
+            document.getElementById('edit_f_income').value = s.f_income || '';
+            document.getElementById('edit_m_prefix').value = s.m_prefix || '';
+            document.getElementById('edit_m_first_name').value = s.m_first_name || '';
+            document.getElementById('edit_m_last_name').value = s.m_last_name || '';
+            document.getElementById('edit_m_age').value = s.m_age || '';
+            document.getElementById('edit_m_phone').value = s.m_phone || '';
+            document.getElementById('edit_m_job').value = s.m_job || '';
+            document.getElementById('edit_m_income').value = s.m_income || '';
+            document.getElementById('edit_g_prefix').value = s.g_prefix || '';
+            document.getElementById('edit_g_first_name').value = s.g_first_name || '';
+            document.getElementById('edit_g_last_name').value = s.g_last_name || '';
+            document.getElementById('edit_g_age').value = s.g_age || '';
+            document.getElementById('edit_g_phone').value = s.g_phone || '';
+            document.getElementById('edit_g_job').value = s.g_job || '';
+            document.getElementById('edit_g_income').value = s.g_income || '';
+            document.getElementById('edit_guardian_relation').value = s.guardian_relation || '';
+
+            const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('editStudentModal'));
+            modal.show();
+        }
+
+        function previewStudentPhoto(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = (e) => { document.getElementById('studentPhotoPreview').src = e.target.result; };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // ===== HELPER FUNCTIONS =====
+
+        // Format date input as DD/MM/YYYY (BE)
+        function formatBEDate(input) {
+            let v = input.value.replace(/\D/g,'');
+            if (v.length >= 3) v = v.slice(0,2)+'/'+v.slice(2);
+            if (v.length >= 6) v = v.slice(0,5)+'/'+v.slice(5);
+            input.value = v.slice(0,10);
+        }
+
+        // Calculate age and day name from BE date
+        function calcAgeFromBE() {
+            const raw = document.getElementById('edit_birth_date_be').value;
+            const parts = raw.split('/');
+            if (parts.length !== 3 || parts[2].length < 4) {
+                document.getElementById('birthInfoBox').classList.add('d-none');
+                return;
+            }
+            const [dd, mm, yyyy_be] = parts.map(Number);
+            const yyyy_ce = yyyy_be - 543;
+            const dateObj = new Date(yyyy_ce, mm-1, dd);
+            if (isNaN(dateObj)) return;
+
+            // Store ISO for backend
+            const iso = `${yyyy_ce}-${String(mm).padStart(2,'0')}-${String(dd).padStart(2,'0')}`;
+            document.getElementById('edit_birth_date').value = iso;
+
+            // Day name (Thai)
+            const days = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัสบดี','ศุกร์','เสาร์'];
+            const dayName = 'วัน' + days[dateObj.getDay()];
+
+            // Age
+            const now = new Date();
+            let years = now.getFullYear() - yyyy_ce;
+            let months = now.getMonth() - (mm-1);
+            let days2 = now.getDate() - dd;
+            if (days2 < 0) { months--; }
+            if (months < 0) { years--; months += 12; }
+            if (days2 < 0) {
+                const prev = new Date(now.getFullYear(), now.getMonth(), 0);
+                days2 += prev.getDate();
+            }
+
+            document.getElementById('birthDayName').textContent = dayName;
+            document.getElementById('ageDisplay').textContent = `${years} ปี ${months} เดือน ${days2} วัน`;
+            document.getElementById('birthInfoBox').classList.remove('d-none');
+        }
+
+        // Validate ID card (13 digits)
+        function validateIdCard(input) {
+            if (input.value.length === 13) {
+                input.classList.remove('is-invalid');
+                input.classList.add('is-valid');
+            } else {
+                input.classList.remove('is-valid');
+                if (input.value.length > 0) input.classList.add('is-invalid');
+            }
+        }
+
+        // House badge picker
+        const housePalette = {
+            'ขุนสรรค์': '#f48fb1',
+            'ขุนศรี': '#ef5350',
+            'เจ้ายี่': '#66bb6a',
+            'ธรรมจักร': '#fdd835'
+        };
+        function selectHouse(el) {
+            document.querySelectorAll('.house-option').forEach(o => {
+                o.style.transform = 'scale(1)';
+                o.style.outline = '1px solid #ddd';
+            });
+            el.style.transform = 'scale(1.2)';
+            el.style.outline = '3px solid #1e3c72';
+            document.getElementById('edit_faculty').value = el.dataset.value;
+        }
+        function selectHouseByValue(val) {
+            document.querySelectorAll('.house-option').forEach(o => {
+                const match = o.dataset.value === val;
+                o.style.transform = match ? 'scale(1.2)' : 'scale(1)';
+                o.style.outline = match ? '3px solid #1e3c72' : '1px solid #ddd';
+            });
+            document.getElementById('edit_faculty').value = val;
+        }
+
+        let viewMode = 'table';
+        function setViewMode(mode) {
+            viewMode = mode;
+            document.getElementById('view-table').classList.toggle('active', mode === 'table');
+            document.getElementById('view-card').classList.toggle('active', mode === 'card');
+            document.getElementById('view-table').classList.toggle('btn-primary', mode === 'table');
+            document.getElementById('view-table').classList.toggle('btn-white', mode !== 'table');
+            document.getElementById('view-card').classList.toggle('btn-primary', mode === 'card');
+            document.getElementById('view-card').classList.toggle('btn-white', mode !== 'card');
+            
+            document.getElementById('studentTableView').classList.toggle('d-none', mode === 'card');
+            document.getElementById('studentCardView').classList.toggle('d-none', mode === 'table');
+            renderTable();
+        }
+
+        function calculateAge(birthDate) {
+            if (!birthDate) return { full: '-', day: '', years: '-' };
+            const birth = new Date(birthDate);
+            const today = new Date();
+            
+            let y = today.getFullYear() - birth.getFullYear();
+            let m = today.getMonth() - birth.getMonth();
+            let d = today.getDate() - birth.getDate();
+
+            if (d < 0) {
+                m--;
+                const lastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+                d += lastMonth.getDate();
+            }
+            if (m < 0) { y--; m += 12; }
+            
+            const dayNames = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+            return {
+                full: `${y} ปี ${m} เดือน ${d} วัน`,
+                day: `เกิดวัน${dayNames[birth.getDay()]}`,
+                years: y,
+                y: y,
+                m: m,
+                d: d
+            };
+        }
+
+        // BMI Calculator
+        function calcBMI() {
+            const w = parseFloat(document.getElementById('edit_weight').value);
+            const h = parseFloat(document.getElementById('edit_height').value) / 100; // cm→m
+            const card = document.getElementById('bmiResultCard');
+            const bmiVal = document.getElementById('bmiValue');
+            const bmiCat = document.getElementById('bmiCategory');
+            const bmiBar = document.getElementById('bmiBar');
+            const bmiBarWrap = document.getElementById('bmiBarWrap');
+            if (!w || !h || h === 0) {
+                bmiVal.textContent = '-'; bmiCat.textContent = '';
+                card.style.borderColor = '';
+                bmiBarWrap.style.display = 'none';
+                return;
+            }
+            const bmi = (w / (h * h)).toFixed(1);
+            bmiVal.textContent = bmi;
+            bmiBarWrap.style.display = '';
+            let cat, color, pct;
+            if (bmi < 18.5)      { cat = 'ผอม (Underweight)'; color = '#64b5f6'; pct = (bmi/18.5)*33; }
+            else if (bmi < 25)   { cat = 'ปกติ (Normal)'; color = '#66bb6a'; pct = 33 + ((bmi-18.5)/6.4)*34; }
+            else if (bmi < 30)   { cat = 'น้ำหนักเกิน (Overweight)'; color = '#ffa726'; pct = 67 + ((bmi-25)/5)*20; }
+            else                 { cat = 'อ้วน (Obese)'; color = '#ef5350'; pct = 90; }
+            bmiCat.textContent = cat;
+            card.style.borderColor = color;
+            bmiVal.style.color = color;
+            bmiBar.style.width = Math.min(pct, 100) + '%';
+            bmiBar.style.backgroundColor = color;
+        }
+
+        // Phone format: enforce starts with 0, 10 digits
+        function fixPhoneFormat(input) {
+            let v = input.value.replace(/\D/g,'');
+            if (v && !v.startsWith('0')) v = '0' + v;
+            v = v.slice(0, 10);
+            input.value = v;
+        }
+
+        // Same-as-registration address toggle
+        function toggleSameAddress(cb) {
+            document.getElementById('currAddrFields').style.display = cb.checked ? 'none' : '';
+            if (cb.checked) {
+                // Copy reg → curr
+                ['house_no','moo','soi','road','zipcode'].forEach(f => {
+                    const s = document.getElementById('edit_reg_'+f);
+                    const d = document.getElementById('edit_curr_'+f);
+                    if (s && d) d.value = s.value;
+                });
+                // Copy address text values from reg selects
+                document.getElementById('edit_curr_zipcode').value = document.getElementById('edit_reg_zipcode').value;
+            }
+        }
+
+        // ===== Cascading Address (from DB via API) =====
+        let _provincesCache = null;
+        async function loadProvinces() {
+            if (_provincesCache) return _provincesCache;
+            const r = await fetch('../api/get-address.php?type=provinces');
+            _provincesCache = await r.json();
+            return _provincesCache;
+        }
+
+        async function populateProvinceSelect(selId, selectedName) {
+            const sel = document.getElementById(selId);
+            const provs = await loadProvinces();
+            sel.innerHTML = '<option value="">เลือกจังหวัด...</option>';
+            provs.forEach(p => {
+                const opt = new Option(p.name, p.id);
+                if (p.name === selectedName) opt.selected = true;
+                sel.appendChild(opt);
+            });
+            return provs.find(p => p.name === selectedName);
+        }
+
+        async function loadRegDistricts(provinceId, provinceName, districtName, subdistrictName) {
+            // If called with name (from editStudent), resolve id first
+            if (!provinceId && provinceName) {
+                const prov = await populateProvinceSelect('edit_reg_province', provinceName);
+                if (prov) provinceId = prov.id;
+            } else if (provinceId) {
+                // triggered by dropdown change
+                document.getElementById('edit_reg_district').innerHTML = '<option value="">เลือกอำเภอ...</option>';
+                document.getElementById('edit_reg_subdistrict').innerHTML = '<option value="">เลือกตำบล...</option>';
+                document.getElementById('edit_reg_zipcode').value = '';
+            }
+            if (!provinceId) return;
+            const r = await fetch(`../api/get-address.php?type=districts&parentId=${provinceId}`);
+            const districts = await r.json();
+            const sel = document.getElementById('edit_reg_district');
+            sel.innerHTML = '<option value="">เลือกอำเภอ...</option>';
+            let distId = null;
+            districts.forEach(d => {
+                const opt = new Option(d.name, d.id);
+                if (d.name === districtName) { opt.selected = true; distId = d.id; }
+                sel.appendChild(opt);
+            });
+            if (distId) await loadRegSubdistricts(distId, subdistrictName);
+        }
+
+        async function loadRegSubdistricts(districtId, subdistrictName) {
+            if (!districtId) {
+                // from dropdown change
+                document.getElementById('edit_reg_subdistrict').innerHTML = '<option value="">เลือกตำบล...</option>';
+                document.getElementById('edit_reg_zipcode').value = '';
+                return;
+            }
+            const r = await fetch(`../api/get-address.php?type=subdistricts&parentId=${districtId}`);
+            const subs = await r.json();
+            const sel = document.getElementById('edit_reg_subdistrict');
+            sel.innerHTML = '<option value="">เลือกตำบล...</option>';
+            subs.forEach(s => {
+                const opt = new Option(s.name, s.id);
+                opt.dataset.postcode = s.postcode;
+                if (s.name === subdistrictName) { opt.selected = true; document.getElementById('edit_reg_zipcode').value = s.postcode; }
+                sel.appendChild(opt);
+            });
+        }
+
+        function setRegZipcode(sel) {
+            const opt = sel.options[sel.selectedIndex];
+            document.getElementById('edit_reg_zipcode').value = opt ? opt.dataset.postcode || '' : '';
+        }
+
+        async function loadCurrDistricts(provinceId, provinceName, districtName, subdistrictName) {
+            if (!provinceId && provinceName) {
+                const prov = await populateProvinceSelect('edit_curr_province', provinceName);
+                if (prov) provinceId = prov.id;
+            } else if (provinceId) {
+                document.getElementById('edit_curr_district').innerHTML = '<option value="">เลือกอำเภอ...</option>';
+                document.getElementById('edit_curr_subdistrict').innerHTML = '<option value="">เลือกตำบล...</option>';
+                document.getElementById('edit_curr_zipcode').value = '';
+            }
+            if (!provinceId) return;
+            const r = await fetch(`../api/get-address.php?type=districts&parentId=${provinceId}`);
+            const districts = await r.json();
+            const sel = document.getElementById('edit_curr_district');
+            sel.innerHTML = '<option value="">เลือกอำเภอ...</option>';
+            let distId = null;
+            districts.forEach(d => {
+                const opt = new Option(d.name, d.id);
+                if (d.name === districtName) { opt.selected = true; distId = d.id; }
+                sel.appendChild(opt);
+            });
+            if (distId) await loadCurrSubdistricts(distId, subdistrictName);
+        }
+
+        async function loadCurrSubdistricts(districtId, subdistrictName) {
+            if (!districtId) {
+                document.getElementById('edit_curr_subdistrict').innerHTML = '<option value="">เลือกตำบล...</option>';
+                document.getElementById('edit_curr_zipcode').value = '';
+                return;
+            }
+            const r = await fetch(`../api/get-address.php?type=subdistricts&parentId=${districtId}`);
+            const subs = await r.json();
+            const sel = document.getElementById('edit_curr_subdistrict');
+            sel.innerHTML = '<option value="">เลือกตำบล...</option>';
+            subs.forEach(s => {
+                const opt = new Option(s.name, s.id);
+                opt.dataset.postcode = s.postcode;
+                if (s.name === subdistrictName) { opt.selected = true; document.getElementById('edit_curr_zipcode').value = s.postcode; }
+                sel.appendChild(opt);
+            });
+        }
+
+        function setCurrZipcode(sel) {
+            const opt = sel.options[sel.selectedIndex];
+            document.getElementById('edit_curr_zipcode').value = opt ? opt.dataset.postcode || '' : '';
+        }
+
+        // Pre-load provinces when page ready
+        loadProvinces();
+
+        document.getElementById('editStudentForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const fd = new FormData();
+            const photoFile = document.getElementById('studentPhotoInput').files[0];
+            if (photoFile) fd.append('photo', photoFile);
+            const data = {
+                id: document.getElementById('edit_id').value,
+                // Tab 1
+                prefix: document.getElementById('edit_prefix').value,
+                first_name_th: document.getElementById('edit_first_name_th').value,
+                last_name_th: document.getElementById('edit_last_name_th').value,
+                first_name_en: document.getElementById('edit_first_name_en').value,
+                last_name_en: document.getElementById('edit_last_name_en').value,
+                nickname: document.getElementById('edit_nickname').value,
+                id_card: document.getElementById('edit_id_card').value,
+                birth_date: document.getElementById('edit_birth_date').value,
+                ethnicity: document.getElementById('edit_ethnicity').value,
+                nationality: document.getElementById('edit_nationality').value,
+                religion: document.getElementById('edit_religion').value,
+                grade_level: document.getElementById('edit_grade_level').value,
+                room: document.getElementById('edit_room').value,
+                number_in_class: document.getElementById('edit_number_in_class').value,
+                faculty: document.getElementById('edit_faculty').value,
+                // Tab 2
+                phone: document.getElementById('edit_phone').value,
+                // Assemble email from prefix + domain
+                email: (() => {
+                    const pfx = document.getElementById('edit_email_prefix').value.trim();
+                    return pfx ? (pfx.includes('@') ? pfx : pfx + '@chainatpit.ac.th') : '';
+                })(),
+                line_id: document.getElementById('edit_line_id').value,
+                facebook: document.getElementById('edit_facebook').value,
+                address_status: document.getElementById('edit_address_status').value,
+                // Address selects store ID as value — we send the text (name) instead
+                curr_house_no: document.getElementById('edit_curr_house_no').value,
+                curr_moo: document.getElementById('edit_curr_moo').value,
+                curr_soi: document.getElementById('edit_curr_soi').value,
+                curr_road: document.getElementById('edit_curr_road').value,
+                curr_province: (() => { const s = document.getElementById('edit_curr_province'); return s.options[s.selectedIndex]?.text || ''; })(),
+                curr_district: (() => { const s = document.getElementById('edit_curr_district'); return s.options[s.selectedIndex]?.text || ''; })(),
+                curr_subdistrict: (() => { const s = document.getElementById('edit_curr_subdistrict'); return s.options[s.selectedIndex]?.text || ''; })(),
+                curr_zipcode: document.getElementById('edit_curr_zipcode').value,
+                reg_house_no: document.getElementById('edit_reg_house_no').value,
+                reg_moo: document.getElementById('edit_reg_moo').value,
+                reg_soi: document.getElementById('edit_reg_soi').value,
+                reg_road: document.getElementById('edit_reg_road').value,
+                reg_province: (() => { const s = document.getElementById('edit_reg_province'); return s.options[s.selectedIndex]?.text || ''; })(),
+                reg_district: (() => { const s = document.getElementById('edit_reg_district'); return s.options[s.selectedIndex]?.text || ''; })(),
+                reg_subdistrict: (() => { const s = document.getElementById('edit_reg_subdistrict'); return s.options[s.selectedIndex]?.text || ''; })(),
+                reg_zipcode: document.getElementById('edit_reg_zipcode').value,
+                // Tab 3
+                blood_group: document.getElementById('edit_blood_group').value,
+                weight: document.getElementById('edit_weight').value,
+                height: document.getElementById('edit_height').value,
+                congenital_disease: document.getElementById('edit_congenital_disease').value,
+                drug_allergies: document.getElementById('edit_drug_allergies').value,
+                food_allergies: document.getElementById('edit_food_allergies').value,
+                // Tab 4
+                f_prefix: document.getElementById('edit_f_prefix').value,
+                f_first_name: document.getElementById('edit_f_first_name').value,
+                f_last_name: document.getElementById('edit_f_last_name').value,
+                f_age: document.getElementById('edit_f_age').value,
+                f_phone: document.getElementById('edit_f_phone').value,
+                f_job: document.getElementById('edit_f_job').value,
+                f_income: document.getElementById('edit_f_income').value,
+                m_prefix: document.getElementById('edit_m_prefix').value,
+                m_first_name: document.getElementById('edit_m_first_name').value,
+                m_last_name: document.getElementById('edit_m_last_name').value,
+                m_age: document.getElementById('edit_m_age').value,
+                m_phone: document.getElementById('edit_m_phone').value,
+                m_job: document.getElementById('edit_m_job').value,
+                m_income: document.getElementById('edit_m_income').value,
+                g_prefix: document.getElementById('edit_g_prefix').value,
+                g_first_name: document.getElementById('edit_g_first_name').value,
+                g_last_name: document.getElementById('edit_g_last_name').value,
+                g_age: document.getElementById('edit_g_age').value,
+                g_phone: document.getElementById('edit_g_phone').value,
+                g_job: document.getElementById('edit_g_job').value,
+                g_income: document.getElementById('edit_g_income').value,
+                guardian_relation: document.getElementById('edit_guardian_relation').value,
+            };
+            // Append all text fields to FormData
+            Object.entries(data).forEach(([k, v]) => fd.append(k, v));
+
+            const btn = this.querySelector('[type="submit"]');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>กำลังบันทึก...';
+
+            try {
+                const res = await fetch('../api/admin/update_student.php', {
+                    method: 'POST',
+                    // No Content-Type header — browser sets multipart/form-data boundary automatically
+                    body: fd
+                });
+                
+                const result = await res.json();
+                if (result.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('editStudentModal')).hide();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'บันทึกสำเร็จ!',
+                        text: result.message,
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    loadStudents(currentPage); // คงหน้าเดิมไว้ ไม่กลับไปหน้า 1
+                } else {
+                    Swal.fire('ข้อผิดพลาด', result.error || 'ไม่สามารถบันทึกข้อมูลได้', 'error');
+                }
+            } catch (err) {
+                Swal.fire('ข้อผิดพลาด', 'ไม่สามารถเชื่อมต่อ API ได้', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-save-fill me-2"></i>บันทึกการแก้ไข';
+            }
+        });
+
+        function deleteStudent(id) {
+            Swal.fire({
+                title: 'ยืนยันการลบ?',
+                text: "คุณต้องการลบข้อมูลนักเรียนรายนี้ใช่หรือไม่?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'ใช่, ลบเลย!',
+                cancelButtonText: 'ยกเลิก'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Actual delete logic would go here
+                    Swal.fire('ลบแล้ว!', 'ข้อมูลนักเรียนถูกลบออกจากระบบแล้ว.', 'success');
+                }
+            });
+        }
+    </script>
+
+    <style>
+        /* Modern Table Adjustments */
+        .table-modern thead th { background: #f8f9fa; border-bottom: 2px solid #eee; }
+        .hover-bg-light:hover { background-color: rgba(43, 75, 138, 0.02) !important; }
+        .tracking-tighter { letter-spacing: -0.02em; }
+        
+        /* House Picker Animations */
+        .house-option { transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .house-option:hover { transform: scale(1.15); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+
+        /* New Student Portrait Card Styles (Mirroring Modern UI) */
+        .student-profile-card {
+            cursor: pointer;
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            background: #fff;
+            border: 1px solid rgba(0,0,0,0.03) !important;
+        }
+        .student-profile-card:hover {
+            transform: translateY(-12px) scale(1.01);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.08) !important;
+        }
+        .student-img-dynamic {
+            transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .student-profile-card:hover .student-img-dynamic {
+            transform: scale(1.06);
+        }
+        
+        .verified-badge {
+            background: #22c55e !important;
+            box-shadow: 0 0 0 4px #fff;
+        }
+
+        .btn-follow-style {
+            background: #f3f4f6;
+            color: #111827;
+            border: none;
+            padding: 0.5rem 1.4rem;
+            font-size: 0.9rem;
+        }
+        .btn-follow-style:hover {
+            background: #e5e7eb;
+            transform: scale(1.05);
+        }
+
+        .rounded-5 { border-radius: 2.5rem !important; }
+        .portrait-wrapper { border-radius: 2.2rem; overflow: hidden; }
+        
+        /* View Toggle UI */
+        .btn-group .btn.active {
+            background-color: #2b4b8a !important;
+            color: white !important;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        #perPageSelect { cursor: pointer; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+</body>
+</html>

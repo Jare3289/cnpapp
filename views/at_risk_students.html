@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8" />
+    <title>Early Warning System | CNP APP</title>
+    <meta content='width=device-width, initial-scale=1.0, shrink-to-fit=no' name='viewport' />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../public/css/style.css">
+    <style>
+        .banner-ews { background-color: #fff1f2; border-radius: 16px; padding: 20px; border: 1px solid #fecdd3; margin-bottom: 25px; }
+        .banner-title { color: #be123c; font-weight: 800; font-size: 1.1rem; }
+        .banner-criteria { color: #e11d48; font-size: 0.8rem; margin-top: 4px; }
+        
+        .table-ews { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+        .table-ews thead th { background-color: #212529 !important; color: white !important; padding: 12px; font-weight: 600; border: none; }
+        .table-ews tbody td { padding: 12px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+        
+        .risk-badge { padding: 4px 12px; border-radius: 20px; font-weight: bold; font-size: 0.75rem; }
+        .risk-high { background-color: #fee2e2; color: #dc2626; }
+        .risk-med { background-color: #fef3c7; color: #d97706; }
+        
+        .btn-csv { background-color: #1e293b; color: white; border: none; border-radius: 8px; padding: 8px 16px; font-weight: 600; transition: 0.3s; }
+        .btn-csv:hover { background-color: #0f172a; color: white; transform: translateY(-2px); }
+        
+        .filter-select { border: none; background: white; border-radius: 8px; padding: 6px 12px; font-size: 0.85rem; font-weight: 600; color: #475569; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="sidebar" id="mainSidebar"></div>
+
+        <main class="app-main main-panel d-flex flex-column min-vh-100" style="background-color: #f8fafc;" id="main">
+            <div class="app-content-header main-header sticky-top bg-white border-bottom shadow-sm">
+                <div class="container-fluid d-flex align-items-center justify-content-between py-2">
+                    <div class="d-flex align-items-center gap-3">
+                        <button class="btn btn-link text-navy d-lg-none px-0" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                        <h5 class="mb-0 fw-bold"><i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Early Warning System (กลุ่มเสี่ยง)</h5>
+                    </div>
+                    <div class="text-muted small">วันนี้: <span id="todayLabel"></span></div>
+                </div>
+            </div>
+
+            <div class="app-content page-content content-padding py-4">
+                <div class="container-fluid">
+                    
+                    <!-- Banner with Filters -->
+                    <div class="banner-ews d-flex flex-wrap justify-content-between align-items-center gap-3">
+                        <div class="d-flex align-items-center">
+                            <div class="bg-white rounded-circle p-2 me-3 shadow-sm" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">
+                                <i class="bi bi-shield-fill-exclamation text-danger fs-4"></i>
+                            </div>
+                            <div>
+                                <div class="banner-title">ระบบคัดกรองนักเรียนกลุ่มเสี่ยง (Early Warning)</div>
+                                <div class="banner-criteria">เกณฑ์: ขาดเรียนสะสม 3 วันขึ้นไป หรือมาสาย 5 วันขึ้นไป ภายในเดือนเดียว</div>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <select id="monthSelect" class="filter-select shadow-sm" onchange="loadAtRisk()">
+                                <option value="01">มกราคม</option><option value="02">กุมภาพันธ์</option><option value="03">มีนาคม</option>
+                                <option value="04">เมษายน</option><option value="05">พฤษภาคม</option><option value="06">มิถุนายน</option>
+                                <option value="07">กรกฎาคม</option><option value="08">สิงหาคม</option><option value="09">กันยายน</option>
+                                <option value="10">ตุลาคม</option><option value="11">พฤศจิกายน</option><option value="12">ธันวาคม</option>
+                            </select>
+                            <select id="yearSelect" class="filter-select shadow-sm" onchange="loadAtRisk()">
+                                <!-- Population via JS -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="small text-muted">แสดง <select class="form-select form-select-sm d-inline-block w-auto border-0 bg-transparent fw-bold"><option>10</option></select> แถว</div>
+                        <div class="position-relative">
+                            <input type="text" class="form-control form-control-sm rounded-pill px-3 shadow-sm" placeholder="ค้นหา..." style="width: 200px;">
+                        </div>
+                    </div>
+
+                    <!-- Table -->
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table-ews">
+                                    <thead>
+                                        <tr>
+                                            <th>รหัส</th>
+                                            <th>ชื่อ - นามสกุล</th>
+                                            <th>ชั้น/ห้อง</th>
+                                            <th class="text-center">ขาด (วัน)</th>
+                                            <th class="text-center">มาสาย (วัน)</th>
+                                            <th class="text-center">ระดับความเสี่ยง</th>
+                                            <th class="text-center">จัดการ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="atRiskBody">
+                                        <!-- Data -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="small text-muted" id="tableInfo">แสดงทั้งหมด 0 รายการ</div>
+                        <div class="d-flex align-items-center gap-3">
+                            <nav>
+                                <ul class="pagination pagination-sm mb-0">
+                                    <li class="page-item disabled"><a class="page-link border-0" href="#">ก่อนหน้า</a></li>
+                                    <li class="page-item active"><a class="page-link border-0 bg-primary text-white rounded-pill mx-1" href="#">1</a></li>
+                                    <li class="page-item disabled"><a class="page-link border-0" href="#">ถัดไป</a></li>
+                                </ul>
+                            </nav>
+                            <button class="btn-csv" onclick="exportCSV()">
+                                <i class="bi bi-file-earmark-spreadsheet me-2"></i>ส่งออกรายชื่อกลุ่มเสี่ยง (CSV)
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../public/js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = await checkAuth('admin');
+            if (user) {
+                initLabel();
+                initYears();
+                loadAtRisk();
+            }
+        });
+
+        function initLabel() {
+            const now = new Date();
+            const d = now.getDate().toString().padStart(2, '0');
+            const m = (now.getMonth() + 1).toString().padStart(2, '0');
+            const y = now.getFullYear() + 543;
+            document.getElementById('todayLabel').textContent = `${d}/${m}/${y}`;
+            document.getElementById('monthSelect').value = m;
+        }
+
+        function initYears() {
+            const yearSelect = document.getElementById('yearSelect');
+            const curYearBE = new Date().getFullYear() + 543;
+            for (let i = 0; i < 5; i++) {
+                const y = curYearBE - i;
+                yearSelect.add(new Option(y, y - 543));
+            }
+        }
+
+        async function loadAtRisk() {
+            const m = document.getElementById('monthSelect').value;
+            const y = document.getElementById('yearSelect').value;
+            
+            $('#atRiskBody').html('<tr><td colspan="7" class="text-center py-5"><div class="spinner-border text-danger"></div></td></tr>');
+
+            try {
+                const res = await fetch(`../api/admin/at_risk_students.php?month=${m}&year=${y}`);
+                const data = await res.json();
+                
+                if (data.success && data.data.length > 0) {
+                    let html = '';
+                    data.data.forEach(s => {
+                        const riskLevel = s.absent_count >= 5 ? 'เสี่ยงสูง' : 'เฝ้าระวัง';
+                        const riskClass = s.absent_count >= 5 ? 'risk-high' : 'risk-med';
+                        
+                        html += `
+                            <tr>
+                                <td>${s.student_id}</td>
+                                <td class="fw-bold">${s.prefix || ''}${s.first_name_th} ${s.last_name_th}</td>
+                                <td>ห้อง ${s.room}</td>
+                                <td class="text-center text-danger fw-bold">${s.absent_count}</td>
+                                <td class="text-center text-warning fw-bold">${s.late_count}</td>
+                                <td class="text-center"><span class="risk-badge ${riskClass}">${riskLevel}</span></td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-light border rounded-pill px-3" onclick="location.href='student_attendance_history.html?id=${s.id}'">ประวัติ</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    $('#atRiskBody').html(html);
+                    $('#tableInfo').text(`แสดงทั้งหมด ${data.data.length} รายการ`);
+                } else {
+                    $('#atRiskBody').html('<tr><td colspan="7" class="text-center py-5 text-muted">ไม่พบข้อมูลกลุ่มเสี่ยงในช่วงเวลาที่เลือก</td></tr>');
+                    $('#tableInfo').text(`แสดงทั้งหมด 0 รายการ`);
+                }
+            } catch (e) {
+                $('#atRiskBody').html('<tr><td colspan="7" class="text-center py-5 text-danger">เกิดข้อผิดพลาดในการโหลดข้อมูล</td></tr>');
+            }
+        }
+
+        function exportCSV() {
+            alert('ระบบกำลังเตรียมไฟล์ CSV...');
+        }
+    </script>
+</body>
+</html>

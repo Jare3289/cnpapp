@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+	<meta charset="UTF-8" />
+	<title>แผงควบคุมคุณครู | CNP APP</title>
+	<meta content='width=device-width, initial-scale=1.0, shrink-to-fit=no' name='viewport' />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="../public/css/style.css">
+    <style>
+        /* ── Modern Clock ── */
+        .clock-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+        .clock-time {
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+        .clock-date {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        .clock-seconds { font-size: 1rem; opacity: 0.7; margin-left: 4px; }
+    </style>
+</head>
+<body>
+	<div class="wrapper">
+		<div class="sidebar" id="mainSidebar">			
+			<div class="logo-header d-flex align-items-center justify-content-between">
+				<a href="teacher_dashboard.html" class="navbar-brand fw-bold text-navy d-flex align-items-center">
+                    <img src="../public/img/logo.png" alt="Logo" class="me-2" style="height: 35px; width: auto; object-fit: contain;" onerror="this.style.display='none'">
+                    <span>CNP <span style="color: var(--pink-vibrant);">APP</span></span>
+                </a>
+                <button class="btn btn-link text-navy d-lg-none" onclick="toggleSidebar()"><i class="fas fa-times"></i></button>
+			</div>
+			<div class="sidebar-wrapper scrollbar-inner">
+				<div class="sidebar-content" id="mainSidebarContent">
+					<!-- Sidebar will be injected by main.js -->
+				</div>
+			</div>
+		</div>
+
+		<main class="app-main main-panel d-flex flex-column min-vh-100 d-flex flex-column min-vh-100" style="background-color: #f8fafc;" id="main" tabindex="-1">
+			<div class="app-content-header main-header sticky-top bg-white">
+				<div class="container-fluid d-flex align-items-center justify-content-between">
+					<div class="d-flex align-items-center gap-3">
+                        <button class="btn btn-link text-navy d-lg-none px-0" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                        <h5 class="mb-0 fw-bold text-navy d-none d-sm-block"><i class="fas fa-calendar-day me-2 opacity-50"></i> <span id="currentDate"></span></h5>
+                    </div>
+					<div class="d-flex align-items-center gap-4">
+                        <div class="user-info text-end">
+                            <p class="mb-0 fw-bold small text-navy" id="navbarUserName">Loading...</p>
+                            <p class="mb-0 x-small text-muted" style="font-size: 0.7rem;">TEACHER PORTAL</p>
+                        </div>
+					</div>
+				</div>
+			</div>
+
+			<div class="app-content page-content py-4 flex-grow-1 d-flex flex-column py-4 flex-grow-1 d-flex flex-column">
+				<div class="container-fluid">
+                    <!-- GREETING BANNER -->
+                    <div class="row mb-4">
+                        <div class="col-lg-8">
+                            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden position-relative" style="background: #0d6efd;">
+                                <div class="card-body p-4 p-md-5 text-white position-relative z-1">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <h2 class="fw-bold mb-2">ยินดีต้อนรับ, <span id="greetingUserName" class="text-warning">คุณครู</span>!</h2>
+                                            <p class="mb-0 fs-5 opacity-75">จัดการข้อมูลการเช็คชื่อห้องเรียนของคุณได้อย่างง่ายดาย</p>
+                                        </div>
+                                        <div class="col-md-4 text-end d-none d-md-block">
+                                            <div class="display-1 opacity-25"><i class="fas fa-chalkboard-teacher"></i></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="clock-card h-100 d-flex flex-column justify-content-center">
+                                <div class="clock-time" id="digitalClock">00:00<span class="clock-seconds">00</span></div>
+                                <div class="clock-date" id="digitalDate">DD MONTH YYYY</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SUMMARY CARDS -->
+                    <div class="row g-4 mb-4">
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                                <div class="card-body p-4 border-start border-primary border-5">
+                                    <div class="d-flex justify-content-between align-items-center mb-0">
+                                        <div class="bg-primary bg-opacity-10 text-primary p-3 rounded-4">
+                                            <i class="fas fa-users fa-2x"></i>
+                                        </div>
+                                        <div class="text-end">
+                                            <p class="text-muted small mb-0 fw-bold">นักเรียนในห้อง</p>
+                                            <h2 class="fw-bold mb-0" id="stat_total">0</h2>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                                <div class="card-body p-4 border-start border-success border-5">
+                                    <div class="d-flex justify-content-between align-items-center mb-0">
+                                        <div class="bg-success bg-opacity-10 text-success p-3 rounded-4">
+                                            <i class="fas fa-user-check fa-2x"></i>
+                                        </div>
+                                        <div class="text-end">
+                                            <p class="text-muted small mb-0 fw-bold">มาเรียนวันนี้</p>
+                                            <h2 class="fw-bold mb-0 text-success" id="stat_present">0</h2>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                                <div class="card-body p-4 border-start border-danger border-5">
+                                    <div class="d-flex justify-content-between align-items-center mb-0">
+                                        <div class="bg-danger bg-opacity-10 text-danger p-3 rounded-4">
+                                            <i class="fas fa-user-times fa-2x"></i>
+                                        </div>
+                                        <div class="text-end">
+                                            <p class="text-muted small mb-0 fw-bold">ขาดเรียนวันนี้</p>
+                                            <h2 class="fw-bold mb-0 text-danger" id="stat_absent">0</h2>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-lg-3">
+                            <div class="card border-0 shadow-sm rounded-4 h-100 overflow-hidden">
+                                <div class="card-body p-4 border-start border-warning border-5">
+                                    <div class="d-flex justify-content-between align-items-center mb-0">
+                                        <div class="bg-warning bg-opacity-10 text-warning p-3 rounded-4">
+                                            <i class="fas fa-clock fa-2x"></i>
+                                        </div>
+                                        <div class="text-end">
+                                            <p class="text-muted small mb-0 fw-bold">เข้าสายวันนี้</p>
+                                            <h2 class="fw-bold mb-0 text-warning" id="stat_late">0</h2>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-4 mb-4">
+                        <div class="col-lg-8">
+                            <div class="row g-4 mb-4">
+                                <div class="col-md-6">
+                                    <div class="card border-0 shadow-sm rounded-4 h-100 p-2 text-center clickable-card" onclick="window.location.href='attendance.html'">
+                                        <div class="card-body py-4">
+                                            <div class="icon-circle-lg bg-pink text-white mx-auto mb-3" style="width: 60px; height: 60px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; background: #d63384;">
+                                                <i class="fas fa-clipboard-check"></i>
+                                            </div>
+                                            <h5 class="fw-bold text-navy">เช็คชื่อนักเรียน</h5>
+                                            <p class="text-muted small mb-0">บันทึกการมาเรียนวันนี้</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="card border-0 shadow-sm rounded-4 h-100 p-2 text-center clickable-card" onclick="window.location.href='reports.html'">
+                                        <div class="card-body py-4">
+                                            <div class="icon-circle-lg bg-info text-white mx-auto mb-3" style="width: 60px; height: 60px; border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; background:#0ea5e9;">
+                                                <i class="fas fa-file-invoice"></i>
+                                            </div>
+                                            <h5 class="fw-bold text-navy">สรุปรายงานผล</h5>
+                                            <p class="text-muted small mb-0">ดูสถิติรวมรายภาคเรียน</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card border-0 shadow-sm rounded-4">
+                                <div class="card-header bg-white border-0 py-3 px-4">
+                                    <h5 class="fw-bold mb-0">ประวัติการบันทึกล่าสุด</h5>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <tbody id="recentActivities">
+                                            <tr><td class="p-4 text-center text-muted">กำลังโหลดข้อมูล...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4">
+                            <div class="card border-0 shadow-sm rounded-4 h-100">
+                                <div class="card-header bg-white border-0 py-3 px-4">
+                                    <h5 class="fw-bold mb-0">สัดส่วนวันนี้</h5>
+                                </div>
+                                <div class="card-body p-4">
+                                    <div style="height: 250px;">
+                                        <canvas id="todayStatusChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+				</div>
+			</div>
+		</div>
+	</div><script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="../public/js/main.js"></script>
+    <script>
+        function toggleSidebar() { document.getElementById('mainSidebar').classList.toggle('active'); }
+        let chart;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = await checkAuth('teacher');
+            
+            // Set Thai Buddhist Date
+            const now = new Date();
+            const thaiOptions = { day: 'numeric', month: 'long', year: 'numeric' };
+            document.getElementById('currentDate').innerText = now.toLocaleDateString('th-TH', thaiOptions);
+
+            if(user) {
+                const fullName = (user.first_name_th || '') + ' ' + (user.last_name_th || '');
+                const displayName = fullName.trim() || user.username;
+                
+                if (document.getElementById('navbarUserName')) document.getElementById('navbarUserName').innerText = displayName;
+                if (document.getElementById('greetingUserName')) document.getElementById('greetingUserName').innerText = displayName;
+                initChart();
+                loadStats();
+                updateClock();
+                setInterval(updateClock, 1000);
+            }
+        });
+
+        function updateClock() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            
+            const days = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+            const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+            
+            const dayName = days[now.getDay()];
+            const date = now.getDate();
+            const monthName = months[now.getMonth()];
+            const year = now.getFullYear() + 543;
+
+            document.getElementById('digitalClock').innerHTML = `${h}:${m}<span class="clock-seconds">${s}</span>`;
+            document.getElementById('digitalDate').innerText = `วัน${dayName}ที่ ${date} ${monthName} ${year}`;
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('todayStatusChart').getContext('2d');
+            chart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['มา', 'ขาด', 'สาย', 'ลา', 'ป่วย'],
+                    datasets: [{
+                        data: [0, 0, 0, 0, 0],
+                        backgroundColor: ['#10b981', '#ef4444', '#f59e0b', '#3b82f6', '#8b5cf6'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '70%',
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        async function loadStats() {
+            try {
+                const res = await fetch('../api/teacher/dashboard-stats');
+                const data = await res.json();
+                
+                $('#stat_total').text(data.totalStudents);
+                $('#stat_present').text(data.today.present);
+                $('#stat_absent').text(data.today.absent);
+                $('#stat_late').text(data.today.late);
+
+                chart.data.datasets[0].data = [
+                    data.today.present, 
+                    data.today.absent, 
+                    data.today.late, 
+                    data.today.leave,
+                    data.today.sick
+                ];
+                chart.update();
+
+                // Mock recent activities
+                const recent = document.getElementById('recentActivities');
+                recent.innerHTML = `
+                    <tr><td class="ps-4 py-3"><i class="fas fa-check-circle text-success me-2"></i> บันทึกเช็คชื่อชั้น ม.1/1 เรียบร้อยแล้ว เมื่อ <span class="text-muted small">08:15 น.</span></td></tr>
+                `;
+            } catch(e) { }
+        }
+    </script>
+    <style>
+        .clickable-card { cursor: pointer; transition: 0.3s transform ease; }
+        .clickable-card:hover { transform: translateY(-10px); }
+        .icon-big { width: 50px; height: 50px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; }
+    </style>
+</body>
+</html>
+

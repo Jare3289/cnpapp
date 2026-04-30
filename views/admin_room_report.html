@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8" />
+    <title>รายงานการมาเรียนรายห้อง | CNP APP</title>
+    <meta content='width=device-width, initial-scale=1.0, shrink-to-fit=no' name='viewport' />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../public/css/style.css">
+    <link rel="stylesheet" href="../public/css/notion.css">
+    <style>
+        .table-detailed { border-collapse: separate; border-spacing: 0; width: 100%; table-layout: auto; font-size: 0.75rem; }
+        .table-detailed th, .table-detailed td { padding: 6px 4px !important; vertical-align: middle; }
+        .table-detailed thead tr:first-child th:first-child { border-top-left-radius: 12px; }
+        .table-detailed thead tr:first-child th:last-child { border-top-right-radius: 12px; }
+        
+        .header-dark { background-color: #212529 !important; color: white !important; }
+        .header-blue { background-color: #0d6efd !important; color: white !important; }
+        .header-gray { background-color: #6c757d !important; color: white !important; }
+        
+        .col-present { background-color: rgba(25, 135, 84, 0.05) !important; color: #198754 !important; font-weight: bold; width: 35px; }
+        .col-absent { background-color: rgba(220, 53, 69, 0.05) !important; color: #dc3545 !important; font-weight: bold; width: 35px; }
+        .col-leave { background-color: rgba(255, 193, 7, 0.05) !important; color: #997404 !important; font-weight: bold; width: 35px; }
+        .col-late { background-color: rgba(13, 202, 240, 0.05) !important; color: #087990 !important; font-weight: bold; width: 35px; }
+        
+        .date-col { min-width: 28px !important; width: 28px !important; padding: 4px 2px !important; font-size: 0.65rem; }
+        
+        .btn-view-report { background-color: #ffc107 !important; border-color: #ffc107 !important; color: #000 !important; }
+        .btn-view-report:hover { background-color: #e0a800 !important; }
+        
+        /* Sticky logic refined for fit */
+        .table-detailed tbody td:nth-child(1) { position: sticky; left: 0; z-index: 2; background: white; border-right: 1px solid #eee !important; width: 40px; }
+        .table-detailed tbody td:nth-child(2) { position: sticky; left: 40px; z-index: 2; background: white; border-right: 2px solid #dee2e6 !important; width: 150px; white-space: normal; }
+        
+        .header-dark:nth-child(1) { position: sticky; left: 0; z-index: 3; }
+        .header-dark:nth-child(2) { position: sticky; left: 40px; z-index: 3; }
+
+        /* Table padding from card */
+        .card-detailed-body { padding: 15px !important; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="sidebar" id="mainSidebar"></div>
+
+        <main class="app-main main-panel d-flex flex-column min-vh-100 d-flex flex-column min-vh-100" style="background-color: #f8fafc;" id="main" tabindex="-1">
+            <div class="app-content-header main-header sticky-top">
+                <div class="container-fluid d-flex align-items-center justify-content-between py-2">
+                    <div class="d-flex align-items-center gap-3">
+                        <button class="btn btn-link text-navy d-lg-none px-0" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0 small" id="breadcrumbList">
+                                <li class="breadcrumb-item"><a href="admin_dashboard.html">หน้าหลัก</a></li>
+                                <li class="breadcrumb-item active">รายงานการมาเรียนรายห้อง</li>
+                            </ol>
+                        </nav>
+                        <div class="ms-3 header-badge d-none d-md-inline-flex animate__animated animate__fadeIn" id="headerStatusBadge">
+                            <i class="bi bi-building-fill text-primary me-2"></i>
+                            <span>สถานะการเช็คชื่อรายห้องเรียน</span>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2" id="headerDateFilter">
+                        <input type="date" id="dateFilter" class="form-control form-control-sm rounded-pill px-3 shadow-none border-light" onchange="loadRoomReport()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="app-content page-content content-padding flex-grow-1 d-flex flex-column py-4">
+                <!-- Overview View -->
+                <div id="overviewContent" style="display: none;">
+                    <div class="container-fluid">
+                        <div class="row align-items-center mb-4">
+                            <div class="col-md-8">
+                                <h3 class="fw-bold text-navy mb-1">ภาพรวมการมาเรียนรายห้อง</h3>
+                                <p class="text-muted small">ติดตามความคืบหน้าการบันทึกภาพรวมทั้งโรงเรียน</p>
+                            </div>
+                        </div>
+
+                        <div class="row g-3" id="statsRow">
+                            <!-- Stats Summary -->
+                        </div>
+
+                        <div class="card border-0 shadow-sm rounded-4 mt-4 overflow-hidden">
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th class="ps-4">ห้องเรียน</th>
+                                                <th class="text-center">จำนวนนักเรียน</th>
+                                                <th class="text-center">มาเรียน</th>
+                                                <th class="text-center">ขาด</th>
+                                                <th class="text-center">สาย</th>
+                                                <th class="text-center">ลา/ป่วย</th>
+                                                <th class="text-center">สถานะการบันทึก</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="reportTableBody">
+                                            <!-- Data will be loaded here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="loadingState" class="text-center py-5">
+                            <div class="spinner-border text-primary" role="status"></div>
+                            <p class="mt-3 text-muted">กำลังรวบรวมข้อมูลรายห้องเรียน...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed View -->
+                <div id="detailedContent" style="display: none;">
+                    <div class="container-fluid">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <div>
+                                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 mb-2" onclick="backToOverview()">
+                                    <i class="bi bi-arrow-left me-1"></i> กลับไปภาพรวม
+                                </button>
+                                <h3 class="fw-bold text-navy mb-0">รายงานการมาเรียนรายห้องแบบละเอียด</h3>
+                            </div>
+                            <div class="text-muted small">
+                                <i class="bi bi-calendar-event me-1"></i> วันที่: <span id="currentDateDisplay"></span>
+                            </div>
+                        </div>
+
+                    <!-- Filters -->
+                    <div class="card border-0 shadow-sm rounded-4 mb-4">
+                        <div class="card-body p-4">
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold text-muted">ตั้งแต่วันที่</label>
+                                    <input type="date" id="startDate" class="form-control rounded-pill shadow-none border-light">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold text-muted">ถึงวันที่</label>
+                                    <input type="date" id="endDate" class="form-control rounded-pill shadow-none border-light">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small fw-bold text-muted">เลือกห้องเรียน</label>
+                                    <select id="detailedRoomSelect" class="form-select rounded-pill shadow-none border-light">
+                                        <!-- Options will be loaded dynamically -->
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <button class="btn btn-view-report rounded-pill w-100 fw-bold py-2 shadow-sm" onclick="loadDetailedData()">
+                                        <i class="bi bi-search me-2"></i> ดูรายงาน
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Table Section -->
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                        <div class="card-header bg-white py-3 border-0 d-flex justify-content-between align-items-center">
+                            <h6 class="fw-bold text-navy mb-0"><i class="bi bi-table me-2"></i> ตารางบันทึกเวลาเรียน</h6>
+                            <button class="btn btn-success btn-sm rounded-pill px-4 fw-bold shadow-sm" onclick="exportDetailedToExcel()">
+                                <i class="bi bi-file-earmark-excel me-1"></i> Export Excel
+                            </button>
+                        </div>
+                        <div class="card-body card-detailed-body">
+                            <div class="table-responsive" style="overflow-x: auto;">
+                                <table class="table table-bordered align-middle mb-0 table-detailed" id="detailedTable">
+                                    <thead class="text-center">
+                                        <tr>
+                                            <th rowspan="2" class="align-middle header-dark border-light" style="min-width: 60px;">เลขที่</th>
+                                            <th rowspan="2" class="align-middle header-dark border-light text-start" style="min-width: 200px;">ชื่อ-นามสกุล</th>
+                                            <th id="dateHeaderParent" class="header-blue border-light py-2">วันที่เช็คชื่อ (จันทร์-ศุกร์)</th>
+                                            <th colspan="4" class="header-gray border-light py-2">สรุป (วัน)</th>
+                                        </tr>
+                                        <tr id="detailedHeaderRow2">
+                                            <!-- Dates will be injected here -->
+                                            <th class="bg-success text-white border-light small" style="width: 50px;">มา</th>
+                                            <th class="bg-danger text-white border-light small" style="width: 50px;">ขาด</th>
+                                            <th class="bg-warning text-dark border-light small" style="width: 50px;">ลา</th>
+                                            <th class="bg-info text-white border-light small" style="width: 50px;">สาย</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="detailedTableBody">
+                                        <!-- Data will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div><script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../public/js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = await checkAuth('admin');
+            if (user) {
+                const urlParams = new URLSearchParams(window.location.search);
+                const room = urlParams.get('room');
+
+                if (room) {
+                    showDetailedReportUI(room);
+                } else {
+                    $('#overviewContent').show();
+                    document.getElementById('headerDateFilter').style.display = 'flex';
+                    document.getElementById('headerStatusBadge').style.display = 'inline-flex';
+                    document.getElementById('dateFilter').valueAsDate = new Date();
+                    loadRoomReport();
+                }
+            }
+        });
+
+        async function loadRoomReport() {
+            const date = document.getElementById('dateFilter').value;
+            $('#loadingState').show();
+            $('#reportTableBody').empty();
+
+            try {
+                const res = await fetch(`../api/admin/room-report.php?date=${date}`);
+                const result = await res.json();
+                $('#loadingState').hide();
+
+                if (result.success) {
+                    let summary = { totalRooms: result.report.length, completed: 0, totalStudents: 0, present: 0 };
+                    
+                    result.report.forEach(r => {
+                        summary.totalStudents += r.total_students;
+                        summary.present += r.present;
+                        if (r.is_complete) summary.completed++;
+
+                        const statusBadge = r.is_complete 
+                            ? '<span class="badge bg-success-subtle text-success rounded-pill px-3">บันทึกเสร็จสิ้น</span>' 
+                            : (r.checked_count > 0 
+                                ? '<span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-3">กำลังดำเนินการ</span>'
+                                : '<span class="badge bg-danger-subtle text-danger rounded-pill px-3">ยังไม่เริ่มบันทึก</span>');
+
+                        const html = `
+                            <tr onclick="navigateToRoom('${r.room}')" style="cursor: pointer;">
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-navy bg-opacity-10 text-navy rounded-3 p-2 me-3 d-flex align-items-center justify-content-center" style="width: 45px; height: 45px;">
+                                            <i class="bi bi-door-open-fill"></i>
+                                        </div>
+                                        <div>
+                                            <div class="fw-bold text-navy h6 mb-0">ห้อง ${r.room}</div>
+                                            <div class="x-small text-muted">คลิกเพื่อดูรายละเอียดรายคน</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center fw-bold">${r.total_students}</td>
+                                <td class="text-center text-success">${r.present}</td>
+                                <td class="text-center text-danger">${r.absent}</td>
+                                <td class="text-center text-warning-emphasis">${r.late}</td>
+                                <td class="text-center text-info">${r.leave}</td>
+                                <td class="text-center">${statusBadge}</td>
+                            </tr>
+                        `;
+                        $('#reportTableBody').append(html);
+                        
+                        // Populate Detailed Room Select
+                        if (!$(`#detailedRoomSelect option[value="${r.room}"]`).length) {
+                            $('#detailedRoomSelect').append(`<option value="${r.room}">${r.room}</option>`);
+                        }
+                    });
+
+                    // Render Overall Stats
+                    $('#statsRow').html(`
+                        <div class="col-md-4">
+                            <div class="card border-0 shadow-sm rounded-4 p-4 bg-navy text-white">
+                                <div class="small opacity-75">ความคืบหน้าการบันทึก</div>
+                                <h2 class="fw-bold mb-0">${summary.completed} / ${summary.totalRooms} ห้อง</h2>
+                                <div class="progress mt-3 bg-white bg-opacity-25" style="height: 6px;">
+                                    <div class="progress-bar bg-white" style="width: ${(summary.completed/summary.totalRooms)*100}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white border-start border-4 border-success">
+                                <div class="small text-muted">นักเรียนมาเรียนรวม</div>
+                                <h2 class="fw-bold mb-0 text-success">${summary.present} <span class="h5 text-muted fw-normal">/ ${summary.totalStudents} คน</span></h2>
+                                <div class="small text-success mt-2 fw-bold">${Math.round((summary.present/summary.totalStudents)*100)}% ของนักเรียนทั้งหมด</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-0 shadow-sm rounded-4 p-4 bg-white border-start border-4 border-warning">
+                                <div class="small text-muted">สถานะโรงเรียนวันนี้</div>
+                                <h2 class="fw-bold mb-1 ${summary.completed === summary.totalRooms ? 'text-success' : 'text-warning-emphasis'}">
+                                    ${summary.completed === summary.totalRooms ? 'เรียบร้อยดี' : 'รอดำเนินการ'}
+                                </h2>
+                                <p class="small text-muted mb-0">ปรับปรุงข้อมูลล่าสุด: ${new Date().toLocaleTimeString('th-TH')}</p>
+                            </div>
+                        </div>
+                    `);
+                }
+            } catch (err) { $('#loadingState').hide(); }
+        }
+
+        function navigateToRoom(room) {
+            window.location.href = `admin_room_report.html?room=${room}`;
+        }
+
+        function showDetailedReportUI(room) {
+            $('#overviewContent').hide();
+            $('#detailedContent').show();
+            
+            // Hide overview-only header elements
+            if(document.getElementById('headerDateFilter')) document.getElementById('headerDateFilter').style.display = 'none';
+            if(document.getElementById('headerStatusBadge')) document.getElementById('headerStatusBadge').style.display = 'none';
+
+            // Update Breadcrumb
+            $('#breadcrumbList').html(`
+                <li class="breadcrumb-item"><a href="admin_dashboard.html">หน้าหลัก</a></li>
+                <li class="breadcrumb-item"><a href="admin_room_report.html">รายงานการมาเรียนรายห้อง</a></li>
+                <li class="breadcrumb-item active">ห้อง ${room}</li>
+            `);
+            
+            // Set Filters
+            const today = new Date();
+            const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+            document.getElementById('startDate').valueAsDate = firstDay;
+            document.getElementById('endDate').valueAsDate = today;
+            
+            // If select options are not yet loaded, we might need a fallback or just set it
+            if (!$(`#detailedRoomSelect option[value="${room}"]`).length) {
+                $('#detailedRoomSelect').append(`<option value="${room}" selected>${room}</option>`);
+            } else {
+                $('#detailedRoomSelect').val(room);
+            }
+            
+            document.getElementById('currentDateDisplay').textContent = new Date().toLocaleDateString('th-TH');
+            
+            loadDetailedData();
+        }
+
+        function backToOverview() {
+            window.location.href = 'admin_room_report.html';
+        }
+
+        async function loadDetailedData() {
+            const room = $('#detailedRoomSelect').val();
+            const startDate = $('#startDate').val();
+            const endDate = $('#endDate').val();
+            
+            $('#detailedTableBody').html('<tr><td colspan="100" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>');
+
+            try {
+                const res = await fetch(`../api/admin/detailed-room-report.php?room=${room}&start_date=${startDate}&end_date=${endDate}`);
+                const data = await res.json();
+                
+                if (data.success) {
+                    // 1. Build Header Row 2 (Dates)
+                    const dateHeaders = data.dates.map(d => {
+                        const dateObj = new Date(d);
+                        return `<th class="border-light date-col bg-white text-navy">${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth()+1).toString().padStart(2, '0')}</th>`;
+                    }).join('');
+                    
+                    $('#detailedHeaderRow2').find('th:not(.bg-success, .bg-danger, .bg-warning, .bg-info)').remove();
+                    $('#detailedHeaderRow2').prepend(dateHeaders);
+                    $('#dateHeaderParent').attr('colspan', data.dates.length);
+
+                    // 2. Build Body
+                    let bodyHtml = '';
+                    data.students.forEach(s => {
+                        let rowHtml = `
+                            <tr>
+                                <td class="text-center fw-bold text-muted">${s.number_in_class || '-'}</td>
+                                <td class="fw-bold">${s.prefix || ''}${s.first_name_th} ${s.last_name_th}</td>
+                        `;
+                        
+                        let summary = { present: 0, absent: 0, leave: 0, late: 0 };
+                        
+                        data.dates.forEach(d => {
+                            const status = data.attendance[s.student_id] ? data.attendance[s.student_id][d] : null;
+                            let icon = '-';
+                            let textColor = 'text-muted opacity-25';
+                            
+                            if (status === 'มา') {
+                                icon = '<i class="bi bi-check-lg"></i>';
+                                textColor = 'text-success fw-bold';
+                                summary.present++;
+                            } else if (status === 'ขาด') {
+                                icon = 'ข';
+                                textColor = 'text-danger fw-bold';
+                                summary.absent++;
+                            } else if (status === 'สาย') {
+                                icon = 'ส';
+                                textColor = 'text-warning-emphasis fw-bold';
+                                summary.late++;
+                            } else if (status === 'ลา' || status === 'ป่วย') {
+                                icon = 'ล';
+                                textColor = 'text-info fw-bold';
+                                summary.leave++;
+                            }
+                            
+                            rowHtml += `<td class="text-center ${textColor}">${icon}</td>`;
+                        });
+                        
+                        rowHtml += `
+                            <td class="text-center col-present">${summary.present}</td>
+                            <td class="text-center col-absent">${summary.absent}</td>
+                            <td class="text-center col-leave">${summary.leave}</td>
+                            <td class="text-center col-late">${summary.late}</td>
+                        </tr>`;
+                        bodyHtml += rowHtml;
+                    });
+                    
+                    $('#detailedTableBody').html(bodyHtml);
+                }
+            } catch (err) {
+                $('#detailedTableBody').html('<tr><td colspan="100" class="text-center text-danger">เกิดข้อผิดพลาดในการโหลดข้อมูล</td></tr>');
+            }
+        }
+
+        function exportDetailedToExcel() {
+            // Placeholder for Excel export
+            alert('กำลังพัฒนาระบบส่งออกไฟล์ Excel...');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8" />
+    <title>สถิติการมาเรียนรายเดือน | CNP APP</title>
+    <meta content='width=device-width, initial-scale=1.0, shrink-to-fit=no' name='viewport' />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../public/css/style.css">
+    <style>
+        :root {
+            --header-total: #0d6efd;
+            --header-present: #198754;
+            --header-absent: #dc3545;
+            --header-percent: #0dcaf0;
+            --header-status: #6c757d;
+        }
+
+        .table-monthly { border-collapse: separate; border-spacing: 0; font-size: 0.85rem; width: 100%; }
+        .table-monthly th, .table-monthly td { padding: 8px 6px !important; border: 1px solid #dee2e6 !important; text-align: center; vertical-align: middle; }
+        
+        .h-total { background-color: var(--header-total) !important; color: white !important; }
+        .h-present { background-color: var(--header-present) !important; color: white !important; }
+        .h-absent { background-color: var(--header-absent) !important; color: white !important; }
+        .h-percent { background-color: var(--header-percent) !important; color: white !important; }
+        .h-status { background-color: var(--header-status) !important; color: white !important; }
+        .h-date { background-color: #212529 !important; color: white !important; }
+
+        .sh-total { background-color: rgba(13, 110, 253, 0.1) !important; color: var(--header-total) !important; font-weight: bold; }
+        .sh-present { background-color: rgba(25, 135, 84, 0.1) !important; color: var(--header-present) !important; font-weight: bold; }
+        .sh-absent { background-color: rgba(220, 53, 69, 0.1) !important; color: var(--header-absent) !important; font-weight: bold; }
+        
+        .col-sum { background-color: rgba(0,0,0,0.03); font-weight: 800; }
+        .btn-view { background-color: #198754 !important; border-color: #198754 !important; color: white !important; }
+        .btn-print { background-color: #6c757d !important; border-color: #6c757d !important; color: white !important; }
+
+        .status-badge { font-size: 0.7rem; padding: 4px 8px; border-radius: 6px; font-weight: bold; }
+        .status-not { background-color: #dc3545; color: white; }
+        .status-done { background-color: #198754; color: white; }
+        
+        .card-detailed-body { padding: 15px !important; }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="sidebar" id="mainSidebar"></div>
+
+        <main class="app-main main-panel d-flex flex-column min-vh-100" style="background-color: #f8fafc;" id="main">
+            <div class="app-content-header main-header sticky-top">
+                <div class="container-fluid d-flex align-items-center justify-content-between py-2">
+                    <div class="d-flex align-items-center gap-3">
+                        <button class="btn btn-link text-navy d-lg-none px-0" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0 small" id="breadcrumbList">
+                                <li class="breadcrumb-item"><a href="admin_dashboard.html">หน้าหลัก</a></li>
+                                <li class="breadcrumb-item active">สถิติการมาเรียนรายเดือน</li>
+                            </ol>
+                        </nav>
+                        <div class="ms-3 header-badge d-none d-md-inline-flex animate__animated animate__fadeIn" id="headerStatusBadge">
+                            <i class="bi bi-calendar-range-fill text-success me-2"></i>
+                            <span>สรุปสถิติรายเดือน</span>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2" id="headerFilters">
+                        <select id="monthSelect" class="form-select form-select-sm rounded-pill border-light shadow-none" onchange="loadOverview()">
+                            <option value="01">มกราคม</option><option value="02">กุมภาพันธ์</option><option value="03">มีนาคม</option>
+                            <option value="04">เมษายน</option><option value="05">พฤษภาคม</option><option value="06">มิถุนายน</option>
+                            <option value="07">กรกฎาคม</option><option value="08">สิงหาคม</option><option value="09">กันยายน</option>
+                            <option value="10">ตุลาคม</option><option value="11">พฤศจิกายน</option><option value="12">ธันวาคม</option>
+                        </select>
+                        <select id="yearSelect" class="form-select form-select-sm rounded-pill border-light shadow-none" onchange="loadOverview()">
+                            <!-- BE Years -->
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="app-content page-content content-padding flex-grow-1 d-flex flex-column py-4">
+                
+                <!-- 1. OVERVIEW SECTION -->
+                <div id="overviewContent" style="display: none;">
+                    <div class="container-fluid">
+                        <div class="row align-items-center mb-4">
+                            <div class="col-md-8">
+                                <h3 class="fw-bold text-navy mb-1">ภาพรวมการมาเรียนรายเดือน</h3>
+                                <p class="text-muted small">สรุปสถิติการมาเรียนของทุกห้องเรียนแยกตามรายเดือน</p>
+                            </div>
+                        </div>
+
+                        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="bg-light">
+                                            <tr>
+                                                <th class="ps-4">ห้องเรียน</th>
+                                                <th class="text-center">นักเรียน</th>
+                                                <th class="text-center">มาเรียน (สะสม)</th>
+                                                <th class="text-center">ไม่มา (สะสม)</th>
+                                                <th class="text-center">สาย (สะสม)</th>
+                                                <th class="text-center">ลา/ป่วย (สะสม)</th>
+                                                <th class="text-center">ร้อยละเฉลี่ย</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="overviewTableBody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. DETAILED SECTION -->
+                <div id="detailedContent" style="display: none;">
+                    <div class="container-fluid">
+                        <div class="d-flex align-items-center justify-content-between mb-4">
+                            <div>
+                                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 mb-2" onclick="backToOverview()">
+                                    <i class="bi bi-arrow-left me-1"></i> กลับไปภาพรวม
+                                </button>
+                                <h3 class="fw-bold text-navy mb-0" id="detailedTitle">รายงานรายห้องแบบละเอียด</h3>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-sm" onclick="window.print()">
+                                    <i class="bi bi-printer me-2"></i> พิมพ์รายงาน
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
+                            <div class="card-body card-detailed-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table-monthly">
+                                        <thead>
+                                            <tr>
+                                                <th rowspan="2" class="h-date" style="width: 120px;">วันที่</th>
+                                                <th colspan="3" class="h-total">ทั้งหมด (คน)</th>
+                                                <th colspan="3" class="h-present">มาเรียน (คน)</th>
+                                                <th colspan="3" class="h-absent">ไม่มา (คน)</th>
+                                                <th rowspan="2" class="h-percent">ร้อยละ<br>การมาเรียน</th>
+                                                <th rowspan="2" class="h-status" style="width: 100px;">สถานะ<br>การเช็คชื่อ</th>
+                                            </tr>
+                                            <tr>
+                                                <th class="sh-total">ชาย</th><th class="sh-total">หญิง</th><th class="sh-total">รวม</th>
+                                                <th class="sh-present">ชาย</th><th class="sh-present">หญิง</th><th class="sh-present">รวม</th>
+                                                <th class="sh-absent">ชาย</th><th class="sh-absent">หญิง</th><th class="sh-absent">รวม</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="detailedTableBody"></tbody>
+                                        <tfoot id="detailedTableFooter" class="bg-light fw-bold"></tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../public/js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = await checkAuth('admin');
+            if (user) {
+                initFilters();
+                const urlParams = new URLSearchParams(window.location.search);
+                const room = urlParams.get('room');
+                if (room) {
+                    showDetailedReport(room);
+                } else {
+                    $('#overviewContent').show();
+                    loadOverview();
+                }
+            }
+        });
+
+        function initFilters() {
+            const now = new Date();
+            document.getElementById('monthSelect').value = (now.getMonth() + 1).toString().padStart(2, '0');
+            const yearSelect = document.getElementById('yearSelect');
+            const currentYearBE = now.getFullYear() + 543;
+            for (let i = 0; i < 5; i++) {
+                const yearBE = currentYearBE - i;
+                yearSelect.add(new Option(yearBE, yearBE - 543));
+            }
+        }
+
+        async function loadOverview() {
+            const month = $('#monthSelect').val();
+            const year = $('#yearSelect').val();
+            $('#overviewTableBody').html('<tr><td colspan="7" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>');
+            
+            try {
+                const res = await fetch(`../api/admin/monthly_stats.php?month=${month}&year=${year}`);
+                const data = await res.json();
+                if (data.success) {
+                    let html = '';
+                    data.report.forEach(r => {
+                        const total = r.present + r.absent + r.late + r.leave;
+                        const percent = total > 0 ? ((r.present / total) * 100).toFixed(0) : 0;
+                        html += `
+                            <tr onclick="navigateToRoom('${r.room}')" style="cursor: pointer;">
+                                <td class="ps-4">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-navy bg-opacity-10 text-navy rounded-3 p-2 me-3 d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                                            <i class="bi bi-door-open-fill"></i>
+                                        </div>
+                                        <div class="fw-bold text-navy">ห้อง ${r.room}</div>
+                                    </div>
+                                </td>
+                                <td class="text-center">${r.total_students}</td>
+                                <td class="text-center text-success">${r.present}</td>
+                                <td class="text-center text-danger">${r.absent}</td>
+                                <td class="text-center text-warning">${r.late}</td>
+                                <td class="text-center text-info">${r.leave}</td>
+                                <td class="text-center fw-bold text-primary">${percent}%</td>
+                            </tr>
+                        `;
+                    });
+                    $('#overviewTableBody').html(html);
+                }
+            } catch (e) { $('#overviewTableBody').html('<tr><td colspan="7" class="text-center py-5 text-danger">โหลดข้อมูลไม่สำเร็จ</td></tr>'); }
+        }
+
+        function navigateToRoom(room) {
+            const month = $('#monthSelect').val();
+            const year = $('#yearSelect').val();
+            window.location.href = `monthly_stats.html?room=${room}&month=${month}&year=${year}`;
+        }
+
+        async function showDetailedReport(room) {
+            $('#overviewContent').hide();
+            $('#detailedContent').show();
+            $('#headerFilters').hide();
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const month = urlParams.get('month') || $('#monthSelect').val();
+            const year = urlParams.get('year') || $('#yearSelect').val();
+            
+            $('#breadcrumbList').html(`
+                <li class="breadcrumb-item"><a href="admin_dashboard.html">หน้าหลัก</a></li>
+                <li class="breadcrumb-item"><a href="monthly_stats.html">สถิติการมาเรียนรายเดือน</a></li>
+                <li class="breadcrumb-item active">ห้อง ${room}</li>
+            `);
+            $('#detailedTitle').text(`สถิติรายห้อง ${room} ประจำเดือน ${$('#monthSelect option:selected').text()}`);
+
+            $('#detailedTableBody').html('<tr><td colspan="12" class="text-center py-5"><div class="spinner-border text-primary"></div></td></tr>');
+
+            try {
+                const res = await fetch(`../api/admin/monthly_stats.php?room=${room}&month=${month}&year=${year}`);
+                const data = await res.json();
+                if (data.success) {
+                    let html = '';
+                    let totals = { tm: 0, tf: 0, tr: 0, pm: 0, pf: 0, pr: 0, am: 0, af: 0, ar: 0, count: 0 };
+                    
+                    data.report.forEach(r => {
+                        const date = new Date(r.date);
+                        const dateStr = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear() + 543}`;
+                        const tr = r.total_m + r.total_f;
+                        const pr = r.present_m + r.present_f;
+                        const ar = r.absent_m + r.absent_f;
+                        const percent = tr > 0 ? ((pr / tr) * 100).toFixed(0) : '-';
+                        
+                        html += `
+                            <tr>
+                                <td class="fw-bold">${dateStr}</td>
+                                <td>${r.total_m}</td><td>${r.total_f}</td><td class="col-sum text-primary">${tr}</td>
+                                <td>${r.present_m || '-'}</td><td>${r.present_f || '-'}</td><td class="col-sum text-success">${pr || '-'}</td>
+                                <td class="text-muted">${r.absent_m || '-'}</td><td class="text-muted">${r.absent_f || '-'}</td><td class="col-sum text-danger">${ar || '-'}</td>
+                                <td class="fw-bold">${percent === '-' ? '-' : percent + '%'}</td>
+                                <td>${r.is_complete ? '<span class="status-badge status-done">เช็คแล้ว</span>' : '<span class="status-badge status-not">ยังไม่เช็ค</span>'}</td>
+                            </tr>
+                        `;
+                        if (r.checked_count > 0) {
+                            totals.tm += r.total_m; totals.tf += r.total_f; totals.tr += tr;
+                            totals.pm += r.present_m; totals.pf += r.present_f; totals.pr += pr;
+                            totals.am += r.absent_m; totals.af += r.absent_f; totals.ar += ar;
+                            totals.count++;
+                        }
+                    });
+                    $('#detailedTableBody').html(html);
+                    if (totals.count > 0) {
+                        const avg = (k) => (totals[k] / totals.count).toFixed(0);
+                        const avgP = totals.tr > 0 ? ((totals.pr / totals.tr) * 100).toFixed(0) : 0;
+                        $('#detailedTableFooter').html(`
+                            <tr>
+                                <td>เฉลี่ยต่อวัน</td>
+                                <td>${avg('tm')}</td><td>${avg('tf')}</td><td class="text-primary">${avg('tr')}</td>
+                                <td>${avg('pm')}</td><td>${avg('pf')}</td><td class="text-success">${avg('pr')}</td>
+                                <td>${avg('am')}</td><td>${avg('af')}</td><td class="text-danger">${avg('ar')}</td>
+                                <td>${avgP}%</td><td></td>
+                            </tr>
+                        `);
+                    }
+                }
+            } catch (e) { $('#detailedTableBody').html('<tr><td colspan="12" class="text-center py-5 text-danger">โหลดข้อมูลไม่สำเร็จ</td></tr>'); }
+        }
+
+        function backToOverview() {
+            window.location.href = 'monthly_stats.html';
+        }
+    </script>
+</body>
+</html>

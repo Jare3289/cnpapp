@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<title>รายงานสรุปผล | CNP APP</title>
+	<meta content='width=device-width, initial-scale=1.0, shrink-to-fit=no' name='viewport' />
+	
+	<!-- Fonts and icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet"><script src="/atlantis-assets/js/plugin/webfont/webfont.min.js"></script>
+	<script>
+		WebFont.load({
+			google: {"families":["Lato:300,400,700,900"]},
+			custom: {"families":["Flaticon", "Font Awesome 5 Solid", "Font Awesome 5 Regular", "Font Awesome 5 Brands", "simple-line-icons"], urls: ['/atlantis-assets/css/fonts.min.css']},
+			active: function() {
+				sessionStorage.fonts = true;
+			}
+		});
+	</script>
+
+	<!-- CSS Files -->
+	<link rel="stylesheet" href="/atlantis-assets/css/bootstrap.min.css">
+	<link rel="stylesheet" href="/atlantis-assets/css/atlantis.min.css">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+	<div class="wrapper">
+		<div class="main-header">
+			<div class="logo-header" data-background-color="white">
+				<a href="/views/teacher_dashboard.html" class="logo">
+					<span class="navbar-brand fw-bold" style="color: var(--color-primary-navy);">CNP <span style="color: var(--color-pink-vibrant);">APP</span></span>
+				</a>
+				<button class="navbar-toggler sidenav-toggler ml-auto" type="button" data-toggle="collapse" data-target="collapse" aria-expanded="false" aria-label="Toggle navigation">
+					<span class="navbar-toggler-icon"><i class="icon-menu"></i></span>
+				</button>
+				<button class="topbar-toggler more"><i class="icon-options-vertical"></i></button>
+				<div class="nav-toggle">
+					<button class="btn btn-toggle toggle-sidebar"><i class="icon-menu"></i></button>
+				</div>
+			</div>
+			<nav class="navbar navbar-header navbar-expand-lg" data-background-color="white">
+				<div class="container-fluid">
+					<ul class="navbar-nav topbar-nav ml-md-auto align-items-center">
+						<li class="nav-item dropdown hidden-caret">
+							<a class="dropdown-toggle profile-pic" data-toggle="dropdown" href="#" aria-expanded="false">
+								<div class="avatar-sm">
+									<img src="/atlantis-assets/img/profile.jpg" alt="..." class="avatar-img rounded-circle">
+								</div>
+							</a>
+							<ul class="dropdown-menu dropdown-user animated fadeIn">
+								<div class="dropdown-user-scroll scrollbar-outer">
+									<li>
+										<div class="user-box">
+											<div class="avatar-lg"><img src="/atlantis-assets/img/profile.jpg" alt="image profile" class="avatar-img rounded"></div>
+											<div class="u-text">
+												<h4 id="teacherNameDisplay">Teacher</h4>
+												<p class="text-muted">teacher@cnp.ac.th</p>
+											</div>
+										</div>
+									</li>
+									<li><div class="dropdown-divider"></div><a class="dropdown-item" href="#" onclick="logout()">ออกจากระบบ</a></li>
+								</div>
+							</ul>
+						</li>
+					</ul>
+				</div>
+			</nav>
+		</div>
+
+		<div class="sidebar sidebar-style-2">			
+			<div class="sidebar-wrapper scrollbar scrollbar-inner">
+				<div class="sidebar-content">
+					<ul class="nav nav-primary">
+						<li class="nav-item">
+							<a href="/views/teacher_dashboard.html">
+								<i class="fas fa-home"></i>
+								<p>หน้าหลัก</p>
+							</a>
+						</li>
+						<li class="nav-section">
+							<span class="sidebar-mini-icon"><i class="fa fa-ellipsis-h"></i></span>
+							<h4 class="text-section">เมนูการสอน</h4>
+						</li>
+						<li class="nav-item">
+							<a href="/views/attendance.html">
+								<i class="fas fa-clipboard-check"></i>
+								<p>เช็คชื่อวันนี้</p>
+							</a>
+						</li>
+						<li class="nav-item">
+							<a href="/views/edit_attendance.html">
+								<i class="fas fa-history"></i>
+								<p>ประวัติรายวัน</p>
+							</a>
+						</li>
+						<li class="nav-item active">
+							<a href="/views/reports.html">
+								<i class="fas fa-file-invoice"></i>
+								<p>รายงานสรุปผล</p>
+							</a>
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
+
+			<div class="app-content page-content content-padding mt-4 flex-grow-1 d-flex flex-column py-4 flex-grow-1 d-flex flex-column">
+				<div class="container-fluid">
+                    <div class="card border-0 shadow-sm rounded-4 mb-4">
+                        <div class="card-body p-4">
+                            <h4 class="fw-bold mb-4 text-navy"><i class="fas fa-file-invoice-dollar me-2"></i> รายงานสรุปสถิติการมาเรียน</h4>
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label class="small fw-bold text-muted mb-2">เข้าดูแบบ</label>
+                                    <select id="reportPeriod" class="form-select border-0 bg-light py-2 rounded-pill shadow-none" onchange="toggleInputs()">
+                                        <option value="monthly">รายเดือน</option>
+                                        <option value="semester">รายภาคเรียน</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2" id="monthInput">
+                                    <label class="small fw-bold text-muted mb-2">เลือกเดือน</label>
+                                    <input type="month" id="monthSelect" class="form-control border-0 bg-light py-2 rounded-pill shadow-none">
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="small fw-bold text-muted mb-2">ห้องเรียน</label>
+                                    <select id="classSelect" class="form-select border-0 bg-light py-2 rounded-pill shadow-none"></select>
+                                </div>
+                                <div class="col-md-2">
+                                    <label class="small fw-bold text-muted mb-2">ปีการศึกษา</label>
+                                    <select id="yearSelect" class="form-select border-0 bg-light py-2 rounded-pill shadow-none">
+                                        <option value="2567">2567</option>
+                                        <option value="2566">2566</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3 d-flex align-items-end">
+                                    <button class="btn btn-primary w-100 py-2 rounded-pill fw-bold shadow-sm" onclick="fetchReport()">
+                                        <i class="fas fa-search me-2"></i> แสดงรายงาน
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="reportContainer" style="display:none;">
+                        <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-5">
+                            <div class="card-header bg-white border-bottom-0 py-3 px-4 d-flex justify-content-between align-items-center">
+                                <h5 class="fw-bold mb-0">ตารางสรุปผลการมาเรียน</h5>
+                                <button class="btn btn-sm btn-outline-success rounded-pill px-3" onclick="exportExcel()">
+                                    <i class="fas fa-file-excel me-2"></i> Export Excel
+                                </button>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-hover align-middle mb-0 table-modern">
+                                    <thead class="bg-light">
+                                        <tr>
+                                            <th class="ps-4">เลขที่</th>
+                                            <th>รหัสนักเรียน</th>
+                                            <th>ชื่อ-นามสกุล</th>
+                                            <th class="text-center">มา</th>
+                                            <th class="text-center">สาย</th>
+                                            <th class="text-center">ขาด</th>
+                                            <th class="text-center">ลา</th>
+                                            <th class="text-center">ป่วย</th>
+                                            <th class="text-center">เปอร์เซ็นต์ (%)</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="reportTableBody"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="loadingState" class="text-center py-5" style="display:none;">
+                        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-3 text-muted">กำลังรวบรวมข้อมูลรายงาน...</p>
+                    </div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="../public/js/main.js"></script>
+    <script>
+        function toggleSidebar() { document.getElementById('mainSidebar').classList.toggle('active'); }
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = await checkAuth(['teacher', 'admin']);
+            if (user) {
+                document.getElementById('monthSelect').value = new Date().toISOString().substring(0, 7);
+                loadClasses();
+            }
+        });
+
+        function toggleInputs() {
+            const period = document.getElementById('reportPeriod').value;
+            document.getElementById('monthInput').style.display = period === 'monthly' ? 'block' : 'none';
+        }
+
+        async function loadClasses() {
+            const res = await fetch('../api/teacher/my-classes');
+            if (res.ok) {
+                const data = await res.json();
+                const select = document.getElementById('classSelect');
+                data.classes.forEach(c => {
+                    let opt = document.createElement('option');
+                    opt.value = c.trim(); opt.innerText = 'ชั้น ' + c.trim();
+                    select.appendChild(opt);
+                });
+            }
+        }
+
+        async function fetchReport() {
+            const period = document.getElementById('reportPeriod').value;
+            const month = document.getElementById('monthSelect').value;
+            const className = document.getElementById('classSelect').value;
+            const year = document.getElementById('yearSelect').value;
+
+            $('#reportContainer').hide();
+            $('#loadingState').fadeIn();
+
+            let url = `../api/teacher/reports?class_name=${className}&academic_year=${year}`;
+            if (period === 'monthly') url += `&month=${month}`;
+
+            try {
+                const res = await fetch(url);
+                const data = await res.json();
+                
+                const tbody = document.getElementById('reportTableBody');
+                tbody.innerHTML = '';
+                
+                data.reports.forEach(r => {
+                    const row = document.createElement('tr');
+                    const perc = parseFloat(r.percent);
+                    let badgeClass = perc >= 80 ? 'bg-success' : (perc >= 60 ? 'bg-warning' : 'bg-danger');
+                    
+                    row.innerHTML = `
+                        <td class="ps-4 fw-bold text-muted">${r.number_in_class || '-'}</td>
+                        <td class="small fw-bold text-navy">${r.student_id}</td>
+                        <td class="fw-semibold">${r.full_name}</td>
+                        <td class="text-center"><span class="badge bg-success-subtle text-success rounded-pill px-3">${r.present}</span></td>
+                        <td class="text-center"><span class="badge bg-info-subtle text-info rounded-pill px-3">${r.late}</span></td>
+                        <td class="text-center"><span class="badge bg-danger-subtle text-danger rounded-pill px-3">${r.absent}</span></td>
+                        <td class="text-center"><span class="badge bg-warning-subtle text-warning rounded-pill px-3">${r.leave}</span></td>
+                        <td class="text-center"><span class="badge bg-secondary-subtle text-secondary rounded-pill px-3">${r.sick}</span></td>
+                        <td class="text-center"><span class="badge ${badgeClass} px-3">${perc}%</span></td>
+                    `;
+                    tbody.appendChild(row);
+                });
+
+                $('#loadingState').hide();
+                $('#reportContainer').fadeIn();
+            } catch (err) {
+                $('#loadingState').hide();
+                Swal.fire('Error', 'ไม่สามารถโหลดข้อมูลรายงานได้', 'error');
+            }
+        }
+
+        function exportExcel() {
+            Swal.fire('Coming Soon', 'ฟังก์ชันส่งออก Excel กำลังอยู่ในช่วงพัฒนา', 'info');
+        }
+    </script>
+</body>
+</html>

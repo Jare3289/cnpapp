@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8" />
+    <title>ปฏิทินการศึกษาและเวลาเรียน | CNP APP</title>
+    <meta content='width=device-width, initial-scale=1.0, shrink-to-fit=no' name='viewport' />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Prompt:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="../public/css/style.css">
+    <link rel="stylesheet" href="../public/css/notion.css">
+
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --primary: #1e3c72;
+            --accent: #4f6ef7;
+            --radius: 20px;
+            --color-holiday: #ef4444; /* แดง */
+            --color-comp: #f472b6;    /* ชมพู */
+            --color-activity: #38bdf8; /* ฟ้า */
+        }
+        body { font-family: 'Google Sans', 'Prompt', sans-serif; background-color: var(--bg); color: #1e293b; }
+        .calendar-container { display: grid; grid-template-columns: 320px 1fr; gap: 24px; }
+        @media (max-width: 1200px) { .calendar-container { grid-template-columns: 1fr; } }
+        .glass-card { background: #ffffff; border-radius: var(--radius); box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); border: 1px solid rgba(0,0,0,0.05); overflow: hidden; }
+
+        /* Header Mini Cal */
+        .mini-cal-header { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .mini-cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; padding: 15px; text-align: center; }
+        .mini-cal-day { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700; cursor: pointer; border-radius: 8px; }
+        .mini-cal-today { background: var(--accent) !important; color: white !important; }
+
+        /* Matrix Matrix Table */
+        .dt-wrapper { overflow: auto; border-radius: 12px; background: white; max-height: 750px; border: 1px solid #e2e8f0; }
+        .dt-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 11px; table-layout: fixed; }
+        .dt-table th, .dt-table td { border-right: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9; text-align: center; height: 42px; position: relative; }
+        .dt-table td { cursor: pointer; transition: 0.2s; }
+        .dt-table td:hover { background: #f8fafc; box-shadow: inset 0 0 0 2px var(--accent); z-index: 10; }
+        .dt-table th { background: #f8fafc; font-weight: 800; color: #475569; position: sticky; top: 0; z-index: 20; }
+        .dt-table td:first-child { position: sticky; left: 0; background: white; z-index: 25; text-align: left; padding-left: 15px; font-weight: 800; width: 160px; font-size: 14px; border-right: 2px solid #e2e8f0; }
+
+        /* สีตามประเภทวันจากฐานข้อมูล */
+        .m-holiday { background-color: var(--color-holiday) !important; color: white !important; font-weight: 800; }
+        .m-comp    { background-color: var(--color-comp) !important; color: white !important; font-weight: 800; }
+        .m-activity { background-color: var(--color-activity) !important; color: white !important; font-weight: 800; }
+        .m-break    { background-color: #f1f5f9; color: #cbd5e1; }
+        
+        .d-sun { background-color: #fff1f2; color: #e11d48; font-weight: 700; }
+        .d-sat { background-color: #f5f3ff; color: #7c3aed; font-weight: 700; }
+        .dc-today { background: #fffbeb !important; outline: 3px solid #f59e0b; outline-offset: -3px; z-index: 30; }
+
+        .btn-add-inline {
+            position: absolute; top: 2px; right: 2px; width: 15px; height: 15px;
+            background: rgba(255,255,255,0.8); border-radius: 4px; display: none;
+            align-items: center; justify-content: center; font-size: 10px; color: var(--accent);
+            border: 1px solid var(--accent); z-index: 5;
+        }
+        .dt-table td:hover .btn-add-inline { display: flex; }
+
+        .legend-chip { display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; padding: 6px 14px; border-radius: 20px; background: white; border: 1px solid #e2e8f0; }
+        .legend-box { width: 14px; height: 14px; border-radius: 4px; }
+        
+        .nav-pills .nav-link { border-radius: 10px; font-weight: 700; color: #64748b; background: white; border: 1px solid #e2e8f0; margin-right: 8px; }
+        .nav-pills .nav-link.active { background: var(--primary); color: white; }
+
+        /* Holiday Summary */
+        .holiday-summary-container { margin-top: 2.5rem; background: white; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.03); }
+        .holiday-header { background: #fdf2f8; border-bottom: 2px solid #fbcfe8; padding: 12px; text-align: center; color: #be185d; font-weight: 800; font-size: 1.1rem; letter-spacing: 0.05em; }
+        .holiday-body { padding: 25px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+        @media (max-width: 768px) { .holiday-body { grid-template-columns: 1fr; gap: 20px; } }
+        .holiday-term-title { font-weight: 800; color: #1e293b; margin-bottom: 15px; font-size: 0.95rem; }
+        .holiday-list { list-style: none; padding: 0; margin: 0; }
+        .holiday-item { font-size: 0.88rem; margin-bottom: 10px; display: flex; gap: 10px; color: #475569; line-height: 1.4; }
+        .holiday-date { font-weight: 700; color: #1e3c72; white-space: nowrap; width: 110px; }
+        .holiday-type-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+        
+        /* ── Modern Clock ── */
+        .clock-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            margin-bottom: 1.5rem;
+        }
+        .clock-time {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+            margin-bottom: 5px;
+        }
+        .clock-date {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .clock-seconds { font-size: 1rem; opacity: 0.7; margin-left: 4px; }
+    </style>
+</head>
+
+<body>
+    <div class="wrapper">
+        <div class="sidebar" id="mainSidebar"></div>
+
+        <main class="app-main main-panel d-flex flex-column min-vh-100 d-flex flex-column min-vh-100" style="background-color: #f8fafc;" id="main" tabindex="-1">
+            <div class="app-content-header main-header sticky-top bg-white border-bottom shadow-sm">
+                <div class="container-fluid d-flex align-items-center justify-content-between py-2 px-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <button class="btn btn-link text-navy d-lg-none px-0" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                        <nav aria-label="breadcrumb"><ol class="breadcrumb mb-0 small fw-bold"><li class="breadcrumb-item"><a href="#" id="homeBreadcrumb" class="text-decoration-none">หน้าหลัก</a></li><li class="breadcrumb-item active">ปฏิทินการศึกษาและเวลาเรียน</li></ol></nav>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span id="dataStatus" class="badge bg-light text-navy border me-2" style="display:none"></span>
+                        <div id="adminControls" class="d-flex gap-2" style="display:none !important;">
+                            <a href="../api/admin/calendar/download_template.php" class="btn btn-sm btn-outline-primary rounded-pill px-3 fw-bold"><i class="bi bi-file-earmark-arrow-down-fill me-1"></i>เทมเพลต CSV</a>
+                            <button class="btn btn-sm btn-primary rounded-pill px-4 fw-bold" data-bs-toggle="modal" data-bs-target="#uploadModal"><i class="bi bi-cloud-arrow-up-fill me-2"></i>อัปโหลดข้อมูล</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="app-content page-content py-4 px-4 flex-grow-1 d-flex flex-column py-4 flex-grow-1 d-flex flex-column">
+                <div class="container-fluid">
+                    <div class="calendar-container">
+                        <!-- รายละเอียดวัน -->
+                        <div class="d-flex flex-column gap-3">
+                            <div class="clock-card">
+                                <div class="clock-time" id="digitalClock">00:00<span class="clock-seconds">00</span></div>
+                                <div class="clock-date" id="digitalDate">DD MONTH YYYY</div>
+                            </div>
+                            <div class="glass-card">
+                                <div class="mini-cal-header">
+                                    <button class="btn btn-sm text-white p-0" onclick="changeMonth(-1)"><i class="bi bi-chevron-left"></i></button>
+                                    <span id="currentMonthLabel" class="fw-bold fs-5">พฤษภาคม</span>
+                                    <button class="btn btn-sm text-white p-0" onclick="changeMonth(1)"><i class="bi bi-chevron-right"></i></button>
+                                </div>
+                                <div class="mini-cal-grid" id="miniCalGrid"></div>
+                            </div>
+                            <div class="glass-card p-4">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 class="fw-bold text-navy mb-0"><i class="bi bi-info-circle-fill me-2 text-primary"></i>รายละเอียดวัน</h6>
+                                    <button id="quickAddBtn" class="btn btn-sm btn-link p-0 text-decoration-none fw-bold" style="display:none" onclick="addEventPrompt(LAST_CLICKED_DATE)">+ เพิ่มกิจกรรม</button>
+                                </div>
+                                <div id="dayEventList"><div class="text-center py-5 text-muted small opacity-50">เลือกวันในตารางเพื่อดูข้อมูล</div></div>
+                            </div>
+                        </div>
+
+                        <!-- ตารางกิจกรรม -->
+                        <div class="d-flex flex-column gap-3">
+                            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                <ul class="nav nav-pills" role="tablist">
+                                    <li class="nav-item"><button class="nav-link active" data-bs-toggle="pill" data-bs-target="#matrixView" type="button">ตารางวันเรียน (Matrix)</button></li>
+                                    <li class="nav-item"><button class="nav-link" data-bs-toggle="pill" data-bs-target="#yearPlan" type="button">ปฏิทินงานรายเดือน</button></li>
+                                </ul>
+                                <div class="d-flex align-items-center gap-2 bg-white p-1 rounded-pill shadow-sm border px-3">
+                                    <label class="small fw-bold text-muted mb-0">ปีการศึกษา:</label>
+                                    <select class="form-select form-select-sm border-0 fw-bold" id="yearSelector" style="width: 120px;" onchange="refreshContent()"></select>
+                                </div>
+                            </div>
+
+                            <div class="tab-content">
+                                <div class="tab-pane fade show active" id="matrixView">
+                                    <div class="dt-wrapper border"><div id="matrixContainer"><div class="text-center py-5"><div class="spinner-border text-primary"></div></div></div></div>
+                                    <div class="d-flex flex-wrap gap-2 mt-4">
+                                        <div class="legend-chip"><div class="legend-box" style="background:var(--color-holiday)"></div> วันหยุด (หยุด)</div>
+                                        <div class="legend-chip"><div class="legend-box" style="background:var(--color-comp)"></div> วันชดเชย (ช)</div>
+                                        <div class="legend-chip"><div class="legend-box" style="background:var(--color-activity)"></div> มีกิจกรรม</div>
+                                    </div>
+
+                                    <div class="holiday-summary-container" id="holidaySummary">
+                                        <!-- Will be populated by JS -->
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="yearPlan"><div class="row g-4" id="planGrid"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal fade" id="editModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content glass-card border-0"><div class="modal-header border-0 px-4 pt-4"><h5 class="fw-bold" id="modalTitle">จัดการกิจกรรม</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-4 pt-0"><form id="eventForm"><input type="hidden" id="eventId"><div class="mb-3"><label class="small fw-bold text-muted">วันที่</label><input type="date" id="eventDate" class="form-control rounded-4" required></div><div class="mb-3"><label class="small fw-bold text-muted">ชื่อกิจกรรม/วันสำคัญ</label><input type="text" id="eventTitle" class="form-control rounded-4" required></div><div class="mb-3"><label class="small fw-bold text-muted">ประเภทวัน (Day Type)</label><select id="eventDayType" class="form-select rounded-4"><option value="ปกติ">วันปกติ</option><option value="หยุด">วันหยุด (ระบายสีแดง)</option><option value="ชดเชย">วันชดเชย (ระบายสีชมพู)</option><option value="กิจกรรมพิเศษ">มีกิจกรรม (ระบายสีฟ้า)</option></select></div><div class="mb-3"><label class="small fw-bold text-muted d-block mb-2">ระดับการมองเห็น (Visibility)</label><div class="btn-group w-100" role="group"><input type="checkbox" class="btn-check v-check" id="visStudent" value="student" autocomplete="off"><label class="btn btn-outline-primary fw-bold" for="visStudent">นักเรียน</label><input type="checkbox" class="btn-check v-check" id="visTeacher" value="teacher" autocomplete="off"><label class="btn btn-outline-primary fw-bold" for="visTeacher">คุณครู</label><input type="checkbox" class="btn-check" id="visAdmin" value="admin" autocomplete="off" checked disabled><label class="btn btn-outline-primary " for="visAdmin">แอดมิน</label></div></div><div class="mb-3"><label class="small fw-bold text-muted">หมายเหตุ</label><textarea id="eventDesc" class="form-control rounded-4" rows="2"></textarea></div><div class="d-flex gap-2"><button type="submit" class="btn btn-primary flex-grow-1 rounded-pill fw-bold">บันทึก</button><button type="button" id="btnDelete" class="btn btn-outline-danger rounded-pill fw-bold" style="display:none" onclick="deleteEvent()">ลบรายการ</button></div></form></div></div></div></div>
+    <div class="modal fade" id="uploadModal" tabindex="-1"><div class="modal-dialog modal-dialog-centered"><div class="modal-content glass-card border-0"><div class="modal-header border-0 px-4 pt-4"><h5 class="fw-bold">นำเข้าข้อมูลกิจกรรม</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div><div class="modal-body p-4 pt-0"><p class="small text-muted mb-4">เลือกไฟล์ CSV เพื่อนำเข้าข้อมูลกิจกรรม</p><input type="file" id="csvFile" class="form-control rounded-4 mb-3" accept=".csv"><button class="btn btn-primary w-100 rounded-pill py-2 fw-bold" onclick="handleUpload()">เริ่มต้นนำเข้า</button></div></div></div></div><script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="../public/js/main.js"></script>
+
+    <script>
+        const TH_MONTHS = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+        const DAY_LONG = ["วันอาทิตย์", "วันจันทร์", "วันอังคาร", "วันพุธ", "วันพฤหัสบดี", "วันศุกร์", "วันเสาร์"];
+        const DAY_SHORT = ["อา", "จ", "อ", "พ", "พฤ", "ศ", "ส"];
+        
+        let ALL_EVENTS = [];
+        let SETTINGS = {};
+        let STATE = { viewYear: new Date().getFullYear(), viewMonth: new Date().getMonth() };
+        let LAST_CLICKED_DATE = null;
+        let USER_ROLE = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const user = await checkAuth(['admin', 'teacher', 'student']);
+            if (user) USER_ROLE = user.role;
+            if (USER_ROLE === 'admin') {
+                $('#adminControls').attr('style', 'display: flex !important;');
+                $('#homeBreadcrumb').attr('href', 'admin_dashboard.html');
+            } else if (USER_ROLE === 'teacher') {
+                $('#homeBreadcrumb').attr('href', 'teacher_dashboard.html');
+            } else if (USER_ROLE === 'student') {
+                $('#homeBreadcrumb').attr('href', 'student_dashboard.html');
+            }
+            initYearSelector();
+            await fetchData();
+            refreshContent();
+            $('#eventForm').on('submit', saveEvent);
+            
+            updateClock();
+            setInterval(updateClock, 1000);
+        });
+
+        function updateClock() {
+            const now = new Date();
+            const h = String(now.getHours()).padStart(2, '0');
+            const m = String(now.getMinutes()).padStart(2, '0');
+            const s = String(now.getSeconds()).padStart(2, '0');
+            
+            const days = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+            const months = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+            
+            const dayName = days[now.getDay()];
+            const date = now.getDate();
+            const monthName = months[now.getMonth()];
+            const year = now.getFullYear() + 543;
+
+            if (document.getElementById('digitalClock')) {
+                document.getElementById('digitalClock').innerHTML = `${h}:${m}<span class="clock-seconds">${s}</span>`;
+                document.getElementById('digitalDate').innerText = `วัน${dayName}ที่ ${date} ${monthName} ${year}`;
+            }
+        }
+
+        function initYearSelector() {
+            const sel = $('#yearSelector');
+            for(let yr = 2023; yr <= 2028; yr++) sel.append(`<option value="${yr}" ${yr === STATE.viewYear ? 'selected' : ''}>พ.ศ. ${yr + 543}</option>`);
+        }
+
+        async function fetchData() {
+            try {
+                const res = await fetch('../api/calendar.php?action=getInitialData&t=' + Date.now());
+                const data = await res.json();
+                if(data.success) {
+                    ALL_EVENTS = data.events;
+                    SETTINGS = data.settings;
+                    console.log("Activity Data Loaded:", ALL_EVENTS);
+                    $('#dataStatus').text(`พบข้อมูลในระบบ ${ALL_EVENTS.length} รายการ`).show();
+                    
+                    // Intelligent Jump to Year with data
+                    if(ALL_EVENTS.length > 0) {
+                        const years = ALL_EVENTS.map(e => e.date_val ? parseInt(e.date_val.substring(0,4)) : 0).filter(y => y > 2000);
+                        const topYear = mode(years);
+                        if(topYear && topYear != STATE.viewYear) {
+                            STATE.viewYear = topYear;
+                            $('#yearSelector').val(topYear);
+                        }
+                    }
+                }
+            } catch(e) { console.error("Fetch Error:", e); }
+        }
+
+        function mode(arr){ return arr.sort((a,b) => arr.filter(v => v===a).length - arr.filter(v => v===b).length).pop(); }
+
+        function refreshContent() { STATE.viewYear = parseInt($('#yearSelector').val()); renderMiniCal(); renderPlan(); renderMatrix(); renderHolidaySummary(); }
+
+        function renderMiniCal() {
+            $('#currentMonthLabel').text(`${TH_MONTHS[STATE.viewMonth]}`);
+            const first = new Date(STATE.viewYear, STATE.viewMonth, 1).getDay();
+            const days = new Date(STATE.viewYear, STATE.viewMonth + 1, 0).getDate();
+            const grid = $('#miniCalGrid').empty();
+            const today = new Date().toISOString().split('T')[0];
+            for(let i = 0; i < first; i++) grid.append(`<div class="mini-cal-day text-muted opacity-25">-</div>`);
+            for(let d = 1; d <= days; d++) {
+                const ds = `${STATE.viewYear}-${String(STATE.viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                const evs = ALL_EVENTS.filter(e => e.date_val && e.date_val.substring(0, 10) === ds);
+                const isHol = evs.some(e => e.day_type === 'หยุด' || (e.activity && e.activity.includes('หยุด')));
+                grid.append($(`<div class="mini-cal-day ${ds === today ? 'mini-cal-today' : ''} ${isHol ? 'text-danger' : ''}">${d}</div>`).on('click', () => { STATE.viewMonth = new Date(ds).getMonth(); renderMiniCal(); showDayDetail(ds); }));
+            }
+        }
+
+        function showDayDetail(ds) {
+            LAST_CLICKED_DATE = ds;
+            const evs = ALL_EVENTS.filter(e => e.date_val && e.date_val.substring(0, 10) === ds);
+            const list = $('#dayEventList').empty();
+            const d = new Date(ds);
+            list.append(`<div class="small fw-bold text-primary mb-3"><i class="bi bi-calendar-check me-2"></i> ${DAY_LONG[d.getDay()]}ที่ ${d.getDate()} ${TH_MONTHS[d.getMonth()]} ${d.getFullYear()+543}</div>`);
+            
+            if (USER_ROLE === 'admin') {
+                $('#quickAddBtn').show();
+            } else {
+                $('#quickAddBtn').hide();
+            }
+
+            if(!evs.length) {
+                list.append('<div class="text-center py-5 text-muted small opacity-50">ไม่มีกิจกรรมพิเศษ</div>');
+            } else {
+                evs.forEach(ev => {
+                    const editProps = USER_ROLE === 'admin' ? `onclick="openEventEdit('${ev.id}')" style="cursor:pointer;"` : '';
+                    const editIcon = USER_ROLE === 'admin' ? '<i class="bi bi-pencil-fill"></i>' : '';
+                    list.append(`<div class="p-3 bg-light rounded-4 mb-2 border-start border-4" style="border-start-color: ${getEventColor(ev)} !important;" ${editProps}><div class="fw-bold text-dark mb-1">${ev.activity}</div><div class="text-muted d-flex justify-content-between x-small"><span>${ev.day_type || 'ปกติ'}</span>${editIcon}</div></div>`);
+                });
+            }
+        }
+
+        function getEventColor(ev) {
+            const type = (ev.day_type || "").toLowerCase();
+            const tit = (ev.activity || "").toLowerCase();
+            if (type === 'หยุด' || tit.includes('หยุด')) return 'var(--color-holiday)';
+            if (type === 'ชดเชย' || tit.includes('ชดเชย')) return 'var(--color-comp)';
+            return 'var(--color-activity)';
+        }
+
+        function renderPlan() {
+            const grid = $('#planGrid').empty();
+            let m = 4; let y = STATE.viewYear;
+
+            for(let i = 0; i < 12; i++) {
+                // Filter events for this month + apply Role filtering
+                let evs = ALL_EVENTS.filter(e => {
+                    if(!e.date_val) return false;
+                    const de = new Date(e.date_val);
+                    return de.getMonth() === m && de.getFullYear() === y;
+                });
+                if (USER_ROLE === 'student') {
+                    evs = evs.filter(e => e.category !== 'ครู');
+                }
+                evs.sort((a,b) => a.date_val.localeCompare(b.date_val));
+
+                // Generate Calendar Grid
+                const firstDay = new Date(y, m, 1).getDay();
+                const daysInMonth = new Date(y, m + 1, 0).getDate();
+                let gridHtml = '<div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:4px; text-align:center; font-weight:700; font-size:12px;">';
+                
+                // Add weekday headers
+                DAY_SHORT.forEach(day => {
+                    gridHtml += `<div class="text-muted" style="font-size:11px; font-weight:600; margin-bottom:4px;">${day}</div>`;
+                });
+
+                for(let blank = 0; blank < firstDay; blank++) {
+                    gridHtml += '<div></div>';
+                }
+
+                for(let d = 1; d <= daysInMonth; d++) {
+                    const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                    const dayEvs = evs.filter(e => e.date_val.substring(0, 10) === ds);
+                    
+                    let bg = '';
+                    let col = '#1e293b';
+                    let tooltip = '';
+                    
+                    if (dayEvs.length > 0) {
+                        const rec = dayEvs.find(e => e.day_type && e.day_type !== 'ปกติ') || dayEvs[0];
+                        const dt = (rec.day_type || '').trim();
+                        const evActivity = dayEvs.map(e => e.activity).join(', ');
+                        
+                        const dow = new Date(y, m, d).getDay();
+                        const isNormalSchoolDay = (dt === 'ปกติ' && (evActivity === 'วันเรียนปกติ' || evActivity === 'ปกติ' || !evActivity));
+                        const isStandardWeekend = (dt === 'วันหยุด' && (dow === 0 || dow === 6) && (!evActivity || evActivity === 'วันหยุด' || evActivity.includes('เสาร์') || evActivity.includes('อาทิตย์')));
+
+                        if (!isNormalSchoolDay && !isStandardWeekend) {
+                            col = '#ffffff';
+                            tooltip = evActivity ? `title="${evActivity.replace(/"/g, '&quot;')}" data-bs-toggle="tooltip"` : '';
+                            
+                            if (dt === 'ชดเชย' || evActivity.includes('ชดเชย')) {
+                                bg = 'background: var(--color-comp);';
+                            } else if (dt === 'วันหยุด' || dt === 'holiday') {
+                                bg = 'background: var(--color-holiday);';
+                            } else {
+                                bg = 'background: var(--color-activity);'; // ฟ้า
+                            }
+                        }
+                    }
+
+                    const clickEv = USER_ROLE === 'admin' ? `onclick="addEventPrompt('${ds}')" style="cursor:pointer;"` : '';
+                    gridHtml += `<div class="rounded-3 d-flex align-items-center justify-content-center" style="aspect-ratio:1; ${bg} color:${col}; ${bg ? 'box-shadow:0 2px 4px rgba(0,0,0,0.1); cursor:pointer;' : ''}" ${clickEv} ${tooltip}>${d}</div>`;
+                }
+                gridHtml += '</div>';
+
+                grid.append(`
+                    <div class="col-6 col-md-4 col-xl-3 mb-3">
+                        <div class="glass-card h-100 p-0 border-0" style="background:#f8fafc; border-radius:12px; overflow:hidden;">
+                            <div class="py-2 text-center text-white" style="background:linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); font-weight:700; font-size:14px;">
+                                ${TH_MONTHS[m]}
+                            </div>
+                            <div class="p-3 bg-white">
+                                ${gridHtml}
+                            </div>
+                        </div>
+                    </div>
+                `);
+
+                m++; if(m > 11) { m = 0; y++; }
+            }
+        }
+
+        function renderMatrix() {
+            const container = $('#matrixContainer').empty();
+            const y_base = STATE.viewYear;
+            const prefix = `ay${y_base+543}_`;
+            const t1s = SETTINGS[prefix+'term1_start'] || `${y_base}-05-16`;
+            const t1e = SETTINGS[prefix+'term1_end']   || `${y_base}-10-10`;
+            const t2s = SETTINGS[prefix+'term2_start'] || `${y_base}-11-01`;
+            const t2e = SETTINGS[prefix+'term2_end']   || `${y_base+1}-03-15`;
+
+            // Build a fast lookup map: date_string -> [events]
+            const evMap = {};
+            ALL_EVENTS.forEach(e => {
+                if (!e.date_val) return;
+                const key = e.date_val.substring(0, 10);
+                if (!evMap[key]) evMap[key] = [];
+                evMap[key].push(e);
+            });
+
+            let html = '<table class="dt-table"><thead><tr><th style="width:160px">เดือน / วัน</th>';
+            for(let d=1; d<=31; d++) html += `<th style="width:30px">${d}</th>`;
+            html += '<th style="width:60px">รวม</th></tr></thead><tbody>';
+
+            let m = 4; let y = y_base;
+            for(let i = 0; i < 12; i++) {
+                const dInM = new Date(y, m + 1, 0).getDate();
+                let schoolDays = 0;
+                html += `<tr><td>${TH_MONTHS[m]} ${y+543}</td>`;
+                for(let d = 1; d <= 31; d++) {
+                    if(d > dInM) { html += '<td></td>'; continue; }
+                    const ds = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+                    const dow = new Date(y, m, d).getDay();
+                    const evs = evMap[ds] || [];
+
+                    // ─── Filter Events for Students ───────────────
+                    if (USER_ROLE === 'student') {
+                        evs = evs.filter(e => e.category !== 'ครู');
+                    }
+
+                    // ─── Determine day_type from DB records ───────────────
+                    // An entry may override the appearance of the day
+                    let dt = ''; // the effective day_type value
+                    let evActivity = '';
+                    if (evs.length > 0) {
+                        // Prioritize any record that has a meaningful day_type
+                        const special = evs.find(e => e.day_type && e.day_type !== 'ปกติ');
+                        const rec = special || evs[0];
+                        dt = (rec.day_type || '').trim();
+                        evActivity = evs.map(e => e.activity).join(', ');
+                    }
+
+                    // ─── Semester break check ──
+                    let isBreak = !((ds >= t1s && ds <= t1e) || (ds >= t2s && ds <= t2e));
+                    // Teacher/Admin wants to see ALL days without gaps:
+                    if (USER_ROLE !== 'student') {
+                        isBreak = false;
+                    }
+
+                    // ─── Color class logic ────────────────────────────────────
+                    let sClass = '';
+                    let text   = DAY_SHORT[dow];
+                    let isSchool = false;
+
+                    // Compensatory first (pink) — before checking for 'หยุด'
+                    if (dt === 'ชดเชย' || dt === 'compensatory' || evActivity.includes('ชดเชย')) {
+                        sClass = 'm-comp'; text = 'ช'; isSchool = true;
+                    }
+                    // Public holiday on a weekday (red)
+                    else if ((dt === 'วันหยุด' || dt === 'holiday' || dt === 'special') && dow !== 0 && dow !== 6) {
+                        sClass = 'm-holiday';
+                    }
+                    // School activity / event (blue)
+                    else if (dt === 'กิจกรรม' || dt === 'activity' || dt === 'กิจกรรมพิเศษ') {
+                        sClass = 'm-activity'; isSchool = true;
+                    }
+                    // Semester break
+                    else if (isBreak) {
+                        sClass = 'm-break'; text = '-';
+                    }
+                    // Weekend
+                    else if (dow === 0) { sClass = 'd-sun'; }
+                    else if (dow === 6) { sClass = 'd-sat'; }
+                    // Normal school day
+                    else { isSchool = true; }
+
+                    if (isSchool) schoolDays++;
+                    if (ds === new Date().toISOString().split('T')[0]) sClass += ' dc-today';
+
+                    let hov = `${DAY_LONG[dow]}ที่ ${d} ${TH_MONTHS[m]} ${y+543}`;
+                    if (evActivity) hov += ` : ${evActivity}`;
+
+                    const btnAddHtml = USER_ROLE === 'admin' ? `<div class="btn-add-inline" onclick="event.stopPropagation();addEventPrompt('${ds}')"><i class="bi bi-plus"></i></div>` : '';
+                    html += `<td class="${sClass}" title="${hov.replace(/"/g,'&quot;')}" onclick="showDayDetail('${ds}')">${btnAddHtml}${text}</td>`;
+                }
+                html += `<td class="fw-bold bg-light" style="font-size:13px">${schoolDays}</td></tr>`;
+                m++; if(m > 11) { m = 0; y++; }
+            }
+            html += '</tbody></table>';
+            container.append(html);
+        }
+
+        function renderHolidaySummary() {
+            const container = $('#holidaySummary').empty();
+            const y_base = STATE.viewYear;
+            const prefix = `ay${y_base+543}_`;
+            const t1e = SETTINGS[prefix+'term1_end']   || `${y_base}-10-10`;
+            const t2s = SETTINGS[prefix+'term2_start'] || `${y_base}-11-01`;
+
+            // Filter meaningful events: Holidays, Compensatory, Activities
+            // EXCLUDE regular weekends unless they have an activity name that isn't just "วันหยุด"
+            const holidays = ALL_EVENTS.filter(e => {
+                if (!e.date_val) return false;
+                const ds = e.date_val.substring(0, 10);
+                if (!ds.startsWith(y_base.toString()) && !ds.startsWith((y_base+1).toString())) return false;
+                
+                const d = new Date(ds);
+                const dow = d.getDay();
+                const type = (e.day_type || '').trim();
+                const act = (e.activity || '').trim();
+
+                // Exclude regular weekends without special activity
+                if ((dow === 0 || dow === 6) && (act === 'วันหยุด' || act === '' || act.includes('เสาร์') || act.includes('อาทิตย์')) && type === 'วันหยุด') {
+                    return false;
+                }
+
+                return (type === 'หยุด' || type === 'วันหยุด' || type === 'ชดเชย' || type === 'กิจกรรม' || type === 'กิจกรรมพิเศษ');
+            });
+            
+            // Group by Term
+            const term1 = holidays.filter(e => e.date_val <= t1e).sort((a,b) => a.date_val.localeCompare(b.date_val));
+            const term2 = holidays.filter(e => e.date_val >= t2s).sort((a,b) => a.date_val.localeCompare(b.date_val));
+
+            const formatDate = (ds) => {
+                const d = new Date(ds);
+                const days = ["อา.", "จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส."];
+                const shortMonths = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+                return `${days[d.getDay()]} ${d.getDate()} ${shortMonths[d.getMonth()]} ${String(d.getFullYear()+543).substring(2)}`;
+            };
+
+            const getDotColor = (e) => {
+                const type = (e.day_type || '').trim();
+                if (type === 'หยุด' || type === 'วันหยุด') return 'var(--color-holiday)';
+                if (type === 'ชดเชย') return 'var(--color-comp)';
+                return 'var(--color-activity)';
+            };
+
+            const renderList = (list) => {
+                if(list.length === 0) return '<div class="text-muted small">ไม่มีข้อมูลกิจกรรมพิเศษ</div>';
+                return `<ul class="holiday-list">` + list.map(e => `
+                    <li class="holiday-item">
+                        <span class="holiday-date">${formatDate(e.date_val)}</span>
+                        <span class="holiday-text">
+                            <span class="holiday-type-dot" style="background:${getDotColor(e)}"></span>
+                            ${e.activity}
+                        </span>
+                    </li>
+                `).join('') + `</ul>`;
+            };
+
+            container.append(`
+                <div class="holiday-header">วันหยุดราชการและกิจกรรมสำคัญ</div>
+                <div class="holiday-body">
+                    <div>
+                        <div class="holiday-term-title">ภาคเรียนที่ 1 (${term1.length} รายการ)</div>
+                        ${renderList(term1)}
+                    </div>
+                    <div>
+                        <div class="holiday-term-title">ภาคเรียนที่ 2 (${term2.length} รายการ)</div>
+                        ${renderList(term2)}
+                    </div>
+                </div>
+            `);
+        }
+
+        function addEventPrompt(ds) { 
+            $('#modalTitle').text('เพิ่มข้อมูลใหม่'); $('#eventId').val(''); $('#eventDate').val(ds); $('#eventTitle').val(''); $('#eventDayType').val('ปกติ'); $('#eventDesc').val(''); $('#btnDelete').hide(); 
+            $('.v-check').prop('checked', true);
+            bootstrap.Modal.getOrCreateInstance('#editModal').show(); 
+        }
+        function openEventEdit(id) { 
+            const ev = ALL_EVENTS.find(e => e.id == id); if (!ev) return; 
+            $('#modalTitle').text('แก้ไขข้อมูล'); $('#eventId').val(ev.id); $('#eventDate').val(ev.date_val.substring(0, 10)); $('#eventTitle').val(ev.activity); $('#eventDayType').val(ev.day_type || 'ปกติ'); $('#eventDesc').val(ev.note || ''); $('#btnDelete').show(); 
+            $('.v-check').prop('checked', false);
+            const cat = ev.category || 'ทั่วไป';
+            if (cat === 'ทั่วไป' || cat === '') { $('.v-check').prop('checked', true); } 
+            else if (cat === 'ครู') { $('#visTeacher').prop('checked', true); } 
+            else { if (cat.includes('student')) $('#visStudent').prop('checked', true); if (cat.includes('teacher')) $('#visTeacher').prop('checked', true); }
+            bootstrap.Modal.getOrCreateInstance('#editModal').show(); 
+        }
+        
+        async function deleteEvent() {
+            const id = $('#eventId').val();
+            if (!id) return;
+            Swal.fire({
+                title: 'ยืนยันการลบ?',
+                text: "คุณต้องการลบกิจกรรมนี้ใช่หรือไม่?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'ใช่, ลบเลย!',
+                cancelButtonText: 'ยกเลิก'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const res = await fetch('../api/calendar.php?action=deleteEvent', { method: 'POST', body: JSON.stringify({id: id}) });
+                        const r = await res.json();
+                        if (r.success) {
+                            bootstrap.Modal.getOrCreateInstance('#editModal').hide();
+                            await fetchData(); refreshContent();
+                            Swal.fire('สำเร็จ', 'ลบข้อมูลเรียบร้อยแล้ว', 'success');
+                        } else {
+                            Swal.fire('ข้อผิดพลาด', r.error || 'ไม่สามารถลบได้', 'error');
+                        }
+                    } catch (e) {
+                        Swal.fire('ข้อผิดพลาด', e.message, 'error');
+                    }
+                }
+            });
+        }
+        async function saveEvent(e) { 
+            e.preventDefault(); 
+            const vis = [];
+            if ($('#visStudent').is(':checked')) vis.push('student');
+            if ($('#visTeacher').is(':checked')) vis.push('teacher');
+            let catStr = (vis.length === 2) ? 'ทั่วไป' : (vis.length === 0 ? 'admin' : vis.join(','));
+            if (vis.length === 1 && vis[0] === 'teacher') catStr = 'ครู';
+
+            const data = { id:$('#eventId').val(), date_val:$('#eventDate').val(), activity:$('#eventTitle').val(), day_type:$('#eventDayType').val(), category:catStr, note:$('#eventDesc').val() }; 
+            console.log('Saving event:', data);
+            
+            try { 
+                const res = await fetch('../api/calendar.php?action=saveEvent', { method: 'POST', body: JSON.stringify(data) }); 
+                const r = await res.json(); 
+                console.log('Save response:', r);
+                
+                if (r.success) { 
+                    bootstrap.Modal.getOrCreateInstance('#editModal').hide(); 
+                    await fetchData(); 
+                    refreshContent(); 
+                    Swal.fire('สำเร็จ', 'บันทึกข้อมูลเรียบร้อยแล้ว', 'success');
+                } else {
+                    Swal.fire('ข้อผิดพลาด', r.error || 'ไม่สามารถบันทึกได้', 'error');
+                }
+            } catch (err) { 
+                console.error('Save fetch error:', err);
+                Swal.fire('ข้อผิดพลาด', err.message, 'error');
+            } 
+        }
+        async function handleUpload() { const fd = new FormData(); fd.append('csv_file', document.getElementById('csvFile').files[0]); try { const res = await fetch('../api/admin/calendar/upload_csv.php', { method: 'POST', body: fd }); const r = await res.json(); if (r.success) { Swal.fire('สำเร็จ', r.message, 'success').then(async () => { await fetchData(); refreshContent(); }); } } catch (e) { } }
+    </script>
+</body>
+</html>

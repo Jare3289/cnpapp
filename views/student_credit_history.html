@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8" />
+    <title>ประวัติคะแนนพฤติกรรม | CNP APP</title>
+    <meta content='width=device-width, initial-scale=1.0, shrink-to-fit=no' name='viewport' />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <link rel="stylesheet" href="../public/css/style.css">
+    <style>
+        .point-card { border-radius: 20px; border: none; overflow: hidden; }
+        .total-box { background: var(--navy-gradient); color: white; padding: 40px; text-align: center; border-radius: 24px; margin-bottom: 30px; }
+        .history-item { background: white; border-radius: 16px; padding: 20px; margin-bottom: 15px; border: 1px solid #eef2f6; transition: 0.3s; }
+        .history-item:hover { transform: translateX(5px); border-color: #3b82f6; }
+        .point-val { font-size: 1.5rem; font-weight: 800; }
+        .point-pos { color: #10b981; }
+        .point-neg { color: #ef4444; }
+    </style>
+</head>
+<body class="bg-light">
+    <div class="wrapper">
+        <div class="sidebar" id="mainSidebar"></div>
+
+        <main class="app-main main-panel d-flex flex-column min-vh-100" style="background-color: #f8fafc;" id="main">
+            <div class="app-content-header main-header sticky-top bg-white border-bottom shadow-sm">
+                <div class="container-fluid d-flex align-items-center justify-content-between py-2">
+                    <div class="d-flex align-items-center gap-3">
+                        <button class="btn btn-link text-navy d-lg-none px-0" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                        <h5 class="mb-0 fw-bold">คะแนนพฤติกรรม</h5>
+                    </div>
+                </div>
+            </div>
+
+            <div class="app-content page-content content-padding py-4">
+                <div class="container">
+                    
+                    <div class="total-box shadow-lg">
+                        <div class="small opacity-75 mb-2">คะแนนพฤติกรรมคงเหลือ</div>
+                        <h1 class="display-3 fw-black mb-0" id="totalPoints">0</h1>
+                        <div class="mt-3">
+                            <span class="badge rounded-pill bg-white bg-opacity-20 px-3 py-2">คะแนนพื้นฐาน: 100</span>
+                        </div>
+                    </div>
+
+                    <h5 class="fw-bold mb-4">ประวัติการปรับปรุงคะแนน</h5>
+                    <div id="historyList">
+                        <!-- Items injected here -->
+                    </div>
+
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../public/js/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkAuth('student');
+            loadHistory();
+        });
+
+        async function loadHistory() {
+            try {
+                const res = await fetch('../api/student/credit_history.php');
+                const data = await res.json();
+                if(data.success) {
+                    const history = data.data;
+                    let total = 100; // Base score
+                    history.forEach(item => total += parseInt(item.points));
+                    
+                    document.getElementById('totalPoints').innerText = total;
+                    
+                    const list = document.getElementById('historyList');
+                    if(history.length === 0) {
+                        list.innerHTML = '<div class="text-center py-5 text-muted">ยังไม่มีประวัติการปรับปรุงคะแนน</div>';
+                        return;
+                    }
+
+                    list.innerHTML = history.map(item => {
+                        const date = new Date(item.created_at).toLocaleDateString('th-TH', { 
+                            year: 'numeric', month: 'short', day: 'numeric' 
+                        });
+                        const pointClass = item.points >= 0 ? 'point-pos' : 'point-neg';
+                        const pointPrefix = item.points >= 0 ? '+' : '';
+                        
+                        return `
+                            <div class="history-item shadow-sm d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="fw-bold fs-5">${item.item_name}</div>
+                                    <div class="small text-muted">${item.category_name} | ${date}</div>
+                                    ${item.remark ? `<div class="x-small text-info mt-1"><i class="bi bi-info-circle me-1"></i>${item.remark}</div>` : ''}
+                                </div>
+                                <div class="point-val ${pointClass}">${pointPrefix}${item.points}</div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            } catch (err) { console.error(err); }
+        }
+    </script>
+</body>
+</html>
