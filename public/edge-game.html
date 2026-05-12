@@ -2,559 +2,661 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Edge Challenge</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>EDGE GAME</title>
 <style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
 
-  body {
-    font-family: 'Segoe UI', sans-serif;
-    background: #111;
-    color: #eee;
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.5s ease;
-    user-select: none;
-  }
+html, body {
+  width:100%; height:100%;
+  overflow:hidden;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+}
 
-  /* ── screens ── */
-  .screen { display: none; width: 100%; max-width: 480px; padding: 24px; }
-  .screen.active { display: flex; flex-direction: column; gap: 20px; }
+body {
+  font-family: -apple-system, 'Helvetica Neue', Arial, sans-serif;
+  background:#060606;
+  color:#f0f0f0;
+  transition: background 0.4s;
+}
 
-  /* ── setup screen ── */
-  h1 { font-size: 2rem; text-align: center; letter-spacing: 2px; }
-  .subtitle { text-align: center; color: #888; font-size: 0.9rem; }
+/* ───────── SCREENS ───────── */
+.screen {
+  position:fixed; inset:0;
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:28px 24px;
+  gap:22px;
+  overflow-y:auto;
+}
+.screen.active { display:flex; }
 
-  .option-group label {
-    display: block;
-    font-size: 0.8rem;
-    color: #999;
-    margin-bottom: 8px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
+/* ───────── SETUP ───────── */
+#setup { background:#060606; }
 
-  .btn-group {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
+.logo {
+  font-size:4.5rem;
+  font-weight:900;
+  letter-spacing:6px;
+  line-height:1;
+  text-align:center;
+  background: linear-gradient(135deg, #00ff88 0%, #00d4ff 50%, #bf5fff 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.logo-sub {
+  text-align:center;
+  font-size:0.75rem;
+  letter-spacing:3px;
+  color:#333;
+  text-transform:uppercase;
+  margin-top:4px;
+}
 
-  .opt-btn {
-    flex: 1;
-    padding: 10px 6px;
-    border: 2px solid #333;
-    border-radius: 8px;
-    background: #1a1a1a;
-    color: #ccc;
-    cursor: pointer;
-    font-size: 0.85rem;
-    text-align: center;
-    transition: all 0.2s;
-  }
-  .opt-btn:hover { border-color: #555; }
-  .opt-btn.selected { border-color: #4caf50; color: #4caf50; background: #0d2010; }
+.grp { width:100%; }
+.grp-label {
+  font-size:0.68rem;
+  letter-spacing:2.5px;
+  color:#444;
+  text-transform:uppercase;
+  margin-bottom:10px;
+}
+.row { display:flex; gap:8px; }
 
-  .start-btn {
-    padding: 16px;
-    font-size: 1.1rem;
-    font-weight: bold;
-    border: none;
-    border-radius: 10px;
-    background: #2e7d32;
-    color: #fff;
-    cursor: pointer;
-    letter-spacing: 2px;
-    transition: background 0.2s;
-  }
-  .start-btn:hover { background: #388e3c; }
+.opt {
+  flex:1;
+  padding:14px 6px;
+  border:2px solid #1a1a1a;
+  border-radius:14px;
+  background:#0e0e0e;
+  color:#555;
+  cursor:pointer;
+  font-size:0.88rem;
+  font-weight:600;
+  text-align:center;
+  line-height:1.5;
+  transition:border-color 0.2s, color 0.2s, background 0.2s;
+}
+.opt small { display:block; font-size:0.68rem; font-weight:400; color:#333; }
+.opt.on { border-color:#00ff88; color:#00ff88; background:#001a0e; }
 
-  /* ── game screen ── */
-  #game-screen {
-    align-items: center;
-    text-align: center;
-    gap: 24px;
-    min-height: 100vh;
-    justify-content: center;
-  }
+#go-btn {
+  width:100%;
+  padding:22px;
+  font-size:1.25rem;
+  font-weight:900;
+  border:none;
+  border-radius:16px;
+  background:#00ff88;
+  color:#000;
+  cursor:pointer;
+  letter-spacing:4px;
+  text-transform:uppercase;
+  box-shadow:0 0 40px rgba(0,255,136,0.35);
+  transition:transform 0.1s, box-shadow 0.2s;
+}
+#go-btn:active { transform:scale(0.97); box-shadow:0 0 20px rgba(0,255,136,0.2); }
 
-  #phase-label {
-    font-size: 2.6rem;
-    font-weight: 900;
-    letter-spacing: 4px;
-    text-shadow: 0 0 30px currentColor;
-    transition: color 0.4s;
-  }
+/* ───────── GAME ───────── */
+#game {
+  background:#060606;
+  position:relative;
+  gap:0;
+  justify-content:space-between;
+  padding:0;
+}
 
-  #phase-timer {
-    font-size: 1rem;
-    color: #aaa;
-    letter-spacing: 1px;
-  }
+#timer-top {
+  width:100%;
+  padding:20px 28px 0;
+  font-size:1rem;
+  font-variant-numeric:tabular-nums;
+  letter-spacing:3px;
+  color:#1e1e1e;
+  text-align:right;
+}
 
-  /* edge bar */
-  .bar-wrapper { width: 100%; }
-  .bar-label {
-    display: flex;
-    justify-content: space-between;
-    font-size: 0.75rem;
-    color: #888;
-    margin-bottom: 6px;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-  }
+#center {
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  width:100%;
+  padding:0 28px;
+}
 
-  #edge-track {
-    width: 100%;
-    height: 22px;
-    background: #1a1a1a;
-    border-radius: 11px;
-    overflow: hidden;
-    position: relative;
-    border: 1px solid #333;
-  }
+#ph-word {
+  font-size:6rem;
+  font-weight:900;
+  letter-spacing:8px;
+  text-align:center;
+  line-height:1;
+}
 
-  #edge-fill {
-    height: 100%;
-    width: 0%;
-    border-radius: 11px;
-    transition: width 0.8s linear, background 0.4s;
-    background: linear-gradient(90deg, #2196f3, #9c27b0);
-  }
+#ph-secs {
+  font-size:3.5rem;
+  font-weight:700;
+  font-variant-numeric:tabular-nums;
+  opacity:0.3;
+}
 
-  #cum-zone {
-    position: absolute;
-    top: 0; bottom: 0;
-    right: 0;
-    width: 15%;
-    background: rgba(255,215,0,0.15);
-    border-left: 2px dashed gold;
-  }
+#ph-taunt {
+  font-size:1.15rem;
+  font-weight:500;
+  text-align:center;
+  min-height:1.8em;
+  padding:0 12px;
+  opacity:0.5;
+  letter-spacing:0.5px;
+}
 
-  #cum-zone-label {
-    position: absolute;
-    top: 50%;
-    right: 6px;
-    transform: translateY(-50%);
-    font-size: 0.6rem;
-    color: gold;
-    letter-spacing: 1px;
-    font-weight: bold;
-  }
+/* ───────── BAR ───────── */
+#bar-wrap {
+  width:100%;
+  padding:0 24px 28px;
+}
+#bar-meta {
+  display:flex;
+  justify-content:space-between;
+  font-size:0.68rem;
+  letter-spacing:2px;
+  color:#222;
+  text-transform:uppercase;
+  margin-bottom:8px;
+}
+#bar-track {
+  width:100%;
+  height:32px;
+  background:#0e0e0e;
+  border-radius:16px;
+  overflow:hidden;
+  position:relative;
+  border:1px solid #141414;
+}
+#bar-fill {
+  height:100%;
+  width:0%;
+  border-radius:16px;
+  background:linear-gradient(90deg,#005cff,#9b27af);
+  transition:width 0.8s ease;
+  position:relative;
+}
+#bar-fill::after {
+  content:'';
+  position:absolute;
+  right:0; top:0; bottom:0;
+  width:4px;
+  background:rgba(255,255,255,0.8);
+  border-radius:0 16px 16px 0;
+  box-shadow:0 0 12px 4px rgba(255,255,255,0.4);
+}
+#cum-mark {
+  position:absolute;
+  top:0; bottom:0; right:0;
+  width:15%;
+  background:rgba(255,215,0,0.06);
+  border-left:2px dashed rgba(255,215,0,0.3);
+}
+#cum-mark span {
+  position:absolute;
+  top:50%; right:7px;
+  transform:translateY(-50%);
+  font-size:0.55rem;
+  letter-spacing:1px;
+  color:rgba(255,215,0,0.4);
+  font-weight:700;
+}
 
-  /* phase-change flash overlay */
-  #flash {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    opacity: 0;
-    transition: opacity 0.15s;
-  }
+#quit-wrap {
+  padding-bottom:24px;
+}
+#quit-btn {
+  padding:8px 24px;
+  border:1px solid #151515;
+  border-radius:20px;
+  background:transparent;
+  color:#1c1c1c;
+  font-size:0.78rem;
+  letter-spacing:1px;
+  cursor:pointer;
+  transition:color 0.2s, border-color 0.2s;
+}
+#quit-btn:active { color:#333; border-color:#2a2a2a; }
 
-  /* instruction box */
-  #instruction {
-    font-size: 1.3rem;
-    font-weight: bold;
-    padding: 16px 24px;
-    border-radius: 12px;
-    letter-spacing: 1px;
-    transition: all 0.4s;
-  }
+/* ───────── ANIMATIONS ───────── */
+@keyframes glow-go {
+  0%,100% { text-shadow:0 0 20px rgba(0,255,136,0.5); transform:scale(1); }
+  50%      { text-shadow:0 0 70px rgba(0,255,136,1);   transform:scale(1.05); }
+}
+@keyframes shake {
+  0%,100%          { transform:translateX(0); }
+  10%,50%,90%      { transform:translateX(-10px); }
+  30%,70%          { transform:translateX(10px); }
+}
+@keyframes glow-cum {
+  0%,100% { text-shadow:0 0 30px gold; transform:scale(1); }
+  50%      { text-shadow:0 0 90px gold, 0 0 120px orange; transform:scale(1.08); }
+}
+@keyframes blink-denied {
+  0%,100% { opacity:1; }
+  50%      { opacity:0.3; }
+}
+@keyframes pulse-secs {
+  0%,100% { transform:scale(1); }
+  50%      { transform:scale(1.2); }
+}
 
-  /* total timer */
-  #total-timer {
-    font-size: 0.85rem;
-    color: #666;
-  }
+/* phase state classes on #game */
+#game.s-go    #ph-word { color:#00ff88; animation:glow-go 1.2s ease-in-out infinite; }
+#game.s-go    #ph-secs { color:#00ff88; }
+#game.s-go    #ph-taunt { color:#00ff88; }
 
-  .stop-btn {
-    padding: 10px 28px;
-    border: 2px solid #333;
-    border-radius: 8px;
-    background: transparent;
-    color: #555;
-    cursor: pointer;
-    font-size: 0.8rem;
-    letter-spacing: 1px;
-  }
-  .stop-btn:hover { border-color: #666; color: #888; }
+#game.s-stop  #ph-word { color:#ff2244; }
+#game.s-stop  #ph-secs { color:#ff2244; }
+#game.s-stop  #ph-taunt { color:#ff2244; }
 
-  /* ── result screen ── */
-  #result-screen { align-items: center; text-align: center; }
+#game.s-cumgo #ph-word { color:gold; animation:glow-cum 0.65s ease-in-out infinite; }
+#game.s-cumgo #ph-secs { color:gold; animation:pulse-secs 0.65s ease-in-out infinite; }
+#game.s-cumgo #ph-taunt { color:gold; opacity:0.8; }
 
-  #result-icon { font-size: 5rem; }
-  #result-title { font-size: 2rem; font-weight: bold; }
-  #result-msg { color: #aaa; line-height: 1.6; font-size: 0.95rem; }
+#game.s-cumno #ph-word { color:#ff2244; animation:blink-denied 0.4s ease-in-out infinite; }
+#game.s-cumno #ph-taunt { color:#ff2244; opacity:0.7; }
 
-  .again-btn {
-    padding: 14px 40px;
-    border: none;
-    border-radius: 10px;
-    background: #1565c0;
-    color: #fff;
-    font-size: 1rem;
-    cursor: pointer;
-    letter-spacing: 2px;
-    transition: background 0.2s;
-  }
-  .again-btn:hover { background: #1976d2; }
+/* shake helper: toggling this class retriggers the animation */
+.do-shake { animation:shake 0.45s ease-in-out !important; }
 
-  /* body state classes */
-  body.go      { background: #0a1f0a; }
-  body.stop    { background: #1f0a0a; }
-  body.cum-go  { background: #00c853; }
-  body.cum-no  { background: #d50000; }
+/* body bg tint */
+body.bg-go   { background:#02100a; }
+body.bg-stop { background:#10020a; }
+body.bg-cumgo { background:#003320; }
+body.bg-cumno { background:#330010; }
+
+/* ───────── RESULT ───────── */
+#result {
+  background:#060606;
+  text-align:center;
+  gap:20px;
+}
+#res-icon  { font-size:6rem; }
+#res-title { font-size:2.8rem; font-weight:900; letter-spacing:2px; }
+#res-msg   { color:#444; font-size:1rem; line-height:1.9; max-width:320px; white-space:pre-line; }
+
+#again-btn {
+  margin-top:8px;
+  padding:18px 52px;
+  border:2px solid #1a1a1a;
+  border-radius:16px;
+  background:transparent;
+  color:#555;
+  font-size:1rem;
+  font-weight:700;
+  letter-spacing:3px;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:all 0.2s;
+}
+#again-btn:active { background:#111; color:#888; }
+
+/* flash overlay */
+#flash-overlay {
+  position:fixed; inset:0;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity 0.1s;
+  z-index:999;
+}
 </style>
 </head>
 <body>
 
-<!-- SETUP -->
-<div class="screen active" id="setup-screen">
-  <h1>EDGE CHALLENGE</h1>
-  <p class="subtitle">ฝึกการกลั้น · เพิ่มความสุขสูงสุด</p>
+<!-- ── SETUP ── -->
+<div class="screen active" id="setup">
+  <div>
+    <div class="logo">EDGE<br>GAME</div>
+    <div class="logo-sub">ฝึกกลั้น · ไปให้สุด</div>
+  </div>
 
-  <div class="option-group">
-    <label>ระยะเวลา</label>
-    <div class="btn-group" id="dur-group">
-      <div class="opt-btn selected" data-val="5">สั้น<br><small>5 นาที</small></div>
-      <div class="opt-btn" data-val="10">ปกติ<br><small>10 นาที</small></div>
-      <div class="opt-btn" data-val="20">ยาว<br><small>20 นาที</small></div>
+  <div class="grp">
+    <div class="grp-label">เล่นนานแค่ไหน?</div>
+    <div class="row" id="dur">
+      <div class="opt" data-v="5">ไว<small>5 นาที</small></div>
+      <div class="opt on" data-v="10">พอดี<small>10 นาที</small></div>
+      <div class="opt" data-v="20">ยาวนาน<small>20 นาที</small></div>
     </div>
   </div>
 
-  <div class="option-group">
-    <label>ระดับความยาก</label>
-    <div class="btn-group" id="diff-group">
-      <div class="opt-btn" data-val="easy">ง่าย</div>
-      <div class="opt-btn selected" data-val="normal">ปกติ</div>
-      <div class="opt-btn" data-val="hard">ยาก</div>
-      <div class="opt-btn" data-val="extreme">สุดขีด</div>
+  <div class="grp">
+    <div class="grp-label">โหดแค่ไหน?</div>
+    <div class="row" id="dif">
+      <div class="opt" data-v="easy">casual</div>
+      <div class="opt on" data-v="normal">เริ่มยาก</div>
+      <div class="opt" data-v="hard">โหด</div>
+      <div class="opt" data-v="extreme">ทรมาน</div>
     </div>
   </div>
 
-  <div class="option-group">
-    <label>อยากถึงจุดสุดยอดไหม?</label>
-    <div class="btn-group" id="cum-group">
-      <div class="opt-btn selected" data-val="yes">ได้เลย</div>
-      <div class="opt-btn" data-val="random">ตามใจเกม</div>
-      <div class="opt-btn" data-val="no">ไม่ (รูนอร์กาซึม)</div>
+  <div class="grp">
+    <div class="grp-label">อยากแตกไหม?</div>
+    <div class="row" id="cum">
+      <div class="opt on" data-v="yes">อยากแตก</div>
+      <div class="opt" data-v="random">ตามใจเกม</div>
+      <div class="opt" data-v="no">no nut 🚫</div>
     </div>
   </div>
 
-  <button class="start-btn" id="start-btn">▶ เริ่มเกม</button>
+  <button id="go-btn">START 🔥</button>
 </div>
 
-<!-- GAME -->
-<div class="screen" id="game-screen">
-  <div id="total-timer">เวลาที่เหลือ: --:--</div>
+<!-- ── GAME ── -->
+<div class="screen" id="game">
+  <div id="timer-top">--:--</div>
 
-  <div id="phase-label">---</div>
-  <div id="phase-timer"></div>
+  <div id="center">
+    <div id="ph-word">---</div>
+    <div id="ph-secs">--</div>
+    <div id="ph-taunt"></div>
+  </div>
 
-  <div id="instruction">รอสักครู่...</div>
-
-  <div class="bar-wrapper">
-    <div class="bar-label">
-      <span>EDGE</span>
-      <span id="edge-pct">0%</span>
+  <div id="bar-wrap">
+    <div id="bar-meta">
+      <span>EDGE</span><span id="bar-pct">0%</span>
     </div>
-    <div id="edge-track">
-      <div id="edge-fill"></div>
-      <div id="cum-zone"><span id="cum-zone-label">CUM</span></div>
+    <div id="bar-track">
+      <div id="bar-fill"></div>
+      <div id="cum-mark"><span>CUM</span></div>
     </div>
   </div>
 
-  <button class="stop-btn" id="quit-btn">หยุดเกม</button>
+  <div id="quit-wrap">
+    <button id="quit-btn">ยอมแพ้</button>
+  </div>
 </div>
 
-<!-- RESULT -->
-<div class="screen" id="result-screen">
-  <div id="result-icon"></div>
-  <div id="result-title"></div>
-  <div id="result-msg"></div>
-  <button class="again-btn" id="again-btn">เล่นอีกครั้ง</button>
+<!-- ── RESULT ── -->
+<div class="screen" id="result">
+  <div id="res-icon"></div>
+  <div id="res-title"></div>
+  <div id="res-msg"></div>
+  <button id="again-btn">เล่นใหม่</button>
 </div>
 
-<div id="flash"></div>
+<div id="flash-overlay"></div>
 
 <script>
-// ── CONFIG ──────────────────────────────────────────────────────────────────
-const DIFFICULTY = {
-  easy:    { goMin:30, goMax:60,  stopMin:8,  stopMax:18, edgeSpeed:0.7, edgeDrop:0.2 },
-  normal:  { goMin:20, goMax:40,  stopMin:12, stopMax:28, edgeSpeed:0.5, edgeDrop:0.3 },
-  hard:    { goMin:10, goMax:22,  stopMin:18, stopMax:38, edgeSpeed:0.4, edgeDrop:0.4 },
-  extreme: { goMin:5,  goMax:14,  stopMin:28, stopMax:55, edgeSpeed:0.3, edgeDrop:0.5 },
+// ─── CONFIG ───────────────────────────────────────────────────────────────
+const DIFF = {
+  easy:    { goMin:30, goMax:60,  stopMin:6,  stopMax:16, rate:0.75, drop:0.18 },
+  normal:  { goMin:18, goMax:36,  stopMin:12, stopMax:28, rate:0.52, drop:0.32 },
+  hard:    { goMin:9,  goMax:20,  stopMin:18, stopMax:42, rate:0.38, drop:0.48 },
+  extreme: { goMin:4,  goMax:12,  stopMin:26, stopMax:58, rate:0.28, drop:0.6  },
 };
 
-// ── STATE ────────────────────────────────────────────────────────────────────
-let cfg = { duration: 5, difficulty: 'normal', cum: 'yes' };
-let gameTimer, phaseTimer, edgeTicker;
-let totalSecondsLeft, phaseSecondsLeft;
-let edgePct = 0;
-let currentPhase = 'go'; // 'go' | 'stop' | 'cum-go' | 'cum-no'
-let inCumZone = false;
-let cumDecided = false;
-let cumCountdown = 0;
+const TAUNTS = {
+  go: [
+    'ช้าๆ อย่าแตกนะ...',
+    'ทนได้ไหมเนี่ย? 👀',
+    'อย่าหยุด... แต่ห้ามแตก',
+    'เพิ่ม speed หน่อยก็ได้',
+    'เก่งมาก... ยังไม่ถึงเวลา',
+    'ใกล้แล้ว... ทนหน่อย',
+    'เยี่ยม — แต่อย่าพลาด',
+  ],
+  stop: [
+    'มือออก!! ด่วน!!',
+    'อย่าแตะ!!',
+    'กล้าแตะมั้ย? 😈',
+    'ทนดูซิ...',
+    'หายใจลึกๆ',
+    'วางลง!! เดี๋ยวนี้!!',
+    'ห้ามแตะ!!',
+  ],
+};
 
-// ── UTILS ────────────────────────────────────────────────────────────────────
-function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-function fmt(s) {
-  const m = Math.floor(s / 60);
-  return `${String(m).padStart(2,'0')}:${String(s % 60).padStart(2,'0')}`;
+// ─── STATE ────────────────────────────────────────────────────────────────
+let cfg = { dur:10, dif:'normal', cum:'yes' };
+let tGame, tPhase, tEdge;
+let totalLeft, phaseLeft, edgePct = 0;
+let phase = 'idle';
+let inCum = false, cumDone = false;
+let audioCtx = null;
+
+// ─── AUDIO ────────────────────────────────────────────────────────────────
+function initAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 }
-function flash(color, ms=300) {
-  const el = document.getElementById('flash');
+
+function tone(freq, dur, type='sine', vol=0.28, delay=0) {
+  if (!audioCtx) return;
+  try {
+    const now = audioCtx.currentTime + delay;
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.connect(g); g.connect(audioCtx.destination);
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol, now);
+    g.gain.exponentialRampToValueAtTime(0.001, now + dur);
+    o.start(now); o.stop(now + dur);
+  } catch(e) {}
+}
+
+const SFX = {
+  go()     { tone(440,.12,'sine',.25); tone(660,.2,'sine',.2,.1); },
+  stop()   { tone(160,.5,'sawtooth',.4); },
+  tick()   { tone(900,.05,'sine',.12); },
+  cumgo()  { tone(660,.18,'sine',.4); tone(880,.18,'sine',.4,.1); tone(1100,.3,'sine',.4,.22); },
+  denied() { tone(300,.25,'sawtooth',.4); tone(180,.7,'sawtooth',.35,.2); },
+  warn()   { tone(550,.08,'sine',.2); tone(420,.08,'sine',.15,.15); },
+};
+
+// ─── VIBRATE ──────────────────────────────────────────────────────────────
+const vib = p => { try { navigator.vibrate && navigator.vibrate(p); } catch(e){} };
+
+// ─── UTILS ────────────────────────────────────────────────────────────────
+const rand  = (a,b) => Math.floor(Math.random()*(b-a+1))+a;
+const pick  = arr  => arr[Math.floor(Math.random()*arr.length)];
+const fmt   = s    => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+
+function flash(color, ms=220) {
+  const el = document.getElementById('flash-overlay');
   el.style.background = color;
-  el.style.opacity = '0.35';
-  setTimeout(() => { el.style.opacity = '0'; }, ms);
+  el.style.opacity = '0.45';
+  setTimeout(()=>{ el.style.opacity='0'; }, ms);
 }
 
-// ── SETUP UI ─────────────────────────────────────────────────────────────────
-['dur-group','diff-group','cum-group'].forEach(id => {
+// ─── OPTION BUTTONS ───────────────────────────────────────────────────────
+['dur','dif','cum'].forEach(id => {
   document.getElementById(id).addEventListener('click', e => {
-    const btn = e.target.closest('.opt-btn');
-    if (!btn) return;
-    btn.parentElement.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('selected'));
-    btn.classList.add('selected');
+    const b = e.target.closest('.opt');
+    if (!b) return;
+    b.parentElement.querySelectorAll('.opt').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
   });
 });
 
-document.getElementById('start-btn').addEventListener('click', () => {
-  cfg.duration   = parseInt(document.querySelector('#dur-group .selected').dataset.val);
-  cfg.difficulty = document.querySelector('#diff-group .selected').dataset.val;
-  cfg.cum        = document.querySelector('#cum-group .selected').dataset.val;
-  startGame();
-});
-
-document.getElementById('quit-btn').addEventListener('click', endGame);
-document.getElementById('again-btn').addEventListener('click', () => {
-  showScreen('setup-screen');
-  document.body.className = '';
-});
-
-// ── SCREEN SWITCHER ──────────────────────────────────────────────────────────
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+// ─── SCREEN SWITCH ────────────────────────────────────────────────────────
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
 
-// ── GAME LOGIC ───────────────────────────────────────────────────────────────
+// ─── START ────────────────────────────────────────────────────────────────
+document.getElementById('go-btn').addEventListener('click', () => {
+  initAudio();
+  cfg.dur = parseInt(document.querySelector('#dur .on').dataset.v);
+  cfg.dif = document.querySelector('#dif .on').dataset.v;
+  cfg.cum = document.querySelector('#cum .on').dataset.v;
+  startGame();
+});
+
+document.getElementById('quit-btn').addEventListener('click', () => end('quit'));
+document.getElementById('again-btn').addEventListener('click', () => {
+  document.body.className='';
+  show('setup');
+});
+
+// tap during cum-go = confirm cum
+document.getElementById('game').addEventListener('click', e => {
+  if (e.target.id === 'quit-btn') return;
+  if (phase === 'cumgo') { clearAll(); showResult('success'); }
+});
+
+// ─── GAME ─────────────────────────────────────────────────────────────────
 function startGame() {
-  edgePct = 0;
-  inCumZone = false;
-  cumDecided = false;
-  totalSecondsLeft = cfg.duration * 60;
-  showScreen('game-screen');
+  edgePct=0; inCum=false; cumDone=false;
+  totalLeft = cfg.dur * 60;
+  show('game');
+  setBar();
+  globalTick();
   startPhase('go');
-  startGlobalTimer();
-  startEdgeTicker();
+  edgeTick();
 }
 
-function startGlobalTimer() {
-  clearInterval(gameTimer);
-  gameTimer = setInterval(() => {
-    totalSecondsLeft--;
-    document.getElementById('total-timer').textContent = `เวลาที่เหลือ: ${fmt(totalSecondsLeft)}`;
-    if (totalSecondsLeft <= 0) {
-      clearInterval(gameTimer);
-      if (!inCumZone) endGame();
+function globalTick() {
+  clearInterval(tGame);
+  tGame = setInterval(()=>{
+    totalLeft--;
+    document.getElementById('timer-top').textContent = fmt(totalLeft);
+    if (totalLeft<=0) {
+      clearInterval(tGame);
+      if (!cumDone && phase!=='cumgo' && phase!=='cumno') {
+        inCum ? decideCum() : end('quit');
+      }
     }
-  }, 1000);
+  },1000);
 }
 
-function startPhase(phase) {
-  clearInterval(phaseTimer);
-  currentPhase = phase;
-  const d = DIFFICULTY[cfg.difficulty];
+function startPhase(p) {
+  clearInterval(tPhase);
+  phase = p;
+  const d = DIFF[cfg.dif];
+  const gEl = document.getElementById('game');
 
-  let phaseSecs, label, instruction, bodyClass;
+  let secs, word, taunt;
 
-  if (phase === 'go') {
-    phaseSecs = rand(d.goMin, d.goMax);
-    label = '♥ GO';
-    instruction = '🟢 ชักว่าวได้เลย — ห้ามถึงจุดสุดยอด!';
-    bodyClass = 'go';
-    flash('#00ff00');
-  } else if (phase === 'stop') {
-    phaseSecs = rand(d.stopMin, d.stopMax);
-    label = '✋ STOP';
-    instruction = '🔴 หยุดมือ! อย่าแตะเลย!';
-    bodyClass = 'stop';
-    flash('#ff0000');
-  } else if (phase === 'cum-go') {
-    phaseSecs = rand(10, 20);
-    label = '💦 CUM!';
-    instruction = `🌟 ถึงจุดสุดยอดได้เลย! มีเวลา ${phaseSecs} วินาที!`;
-    bodyClass = 'cum-go';
-    flash('#00ff00', 800);
-  } else if (phase === 'cum-no') {
-    phaseSecs = 8;
-    label = '🚫 DENIED';
-    instruction = '😈 ไม่ใช่วันนี้! มือออกจากอวัยวะเพศ!';
-    bodyClass = 'cum-no';
-    flash('#ff0000', 800);
+  if (p==='go') {
+    secs  = rand(d.goMin, d.goMax);
+    word  = 'GO';
+    taunt = pick(TAUNTS.go);
+    gEl.className = 'screen active s-go';
+    document.body.className = 'bg-go';
+    flash('#00ff88',180);
+    SFX.go(); vib(40);
+
+  } else if (p==='stop') {
+    secs  = rand(d.stopMin, d.stopMax);
+    word  = 'STOP';
+    taunt = pick(TAUNTS.stop);
+    // retrigger shake
+    const w = document.getElementById('ph-word');
+    w.classList.remove('do-shake');
+    void w.offsetWidth;
+    gEl.className = 'screen active s-stop';
+    w.classList.add('do-shake');
+    document.body.className = 'bg-stop';
+    flash('#ff2244',180);
+    SFX.stop(); vib([220,80,220]);
+
+  } else if (p==='cumgo') {
+    secs  = rand(12,20);
+    word  = 'CUM!!';
+    taunt = `แตะหน้าจอภายใน ${secs} วิ!!`;
+    gEl.className = 'screen active s-cumgo';
+    document.body.className = 'bg-cumgo';
+    flash('#00ff88',600);
+    SFX.cumgo(); vib([80,40,80,40,80,40,200]);
+
+  } else if (p==='cumno') {
+    secs  = 6;
+    word  = 'NO!!';
+    taunt = 'ไม่ใช่วันนี้ 😈 มือออก!!';
+    gEl.className = 'screen active s-cumno';
+    document.body.className = 'bg-cumno';
+    flash('#ff2244',600);
+    SFX.denied(); vib(700);
   }
 
-  document.body.className = bodyClass;
-  document.getElementById('phase-label').textContent = label;
-  document.getElementById('instruction').textContent = instruction;
-  phaseSecondsLeft = phaseSecs;
-  document.getElementById('phase-timer').textContent = `${phaseSecondsLeft}s`;
+  document.getElementById('ph-word').textContent = word;
+  document.getElementById('ph-taunt').textContent = taunt;
+  phaseLeft = secs;
+  document.getElementById('ph-secs').textContent = phaseLeft;
 
-  phaseTimer = setInterval(() => {
-    phaseSecondsLeft--;
-    document.getElementById('phase-timer').textContent = `${phaseSecondsLeft}s`;
-    if (phaseSecondsLeft <= 0) {
-      clearInterval(phaseTimer);
-      onPhaseEnd(phase);
+  tPhase = setInterval(()=>{
+    phaseLeft--;
+    document.getElementById('ph-secs').textContent = phaseLeft;
+    if (phaseLeft<=5 && phaseLeft>0) { SFX.tick(); vib(15); }
+    // surprise stop while going — random chance at 3s left
+    if (p==='go' && phaseLeft===3 && edgePct>50 && Math.random()<0.2) {
+      SFX.warn();
     }
-  }, 1000);
+    if (phaseLeft<=0) { clearInterval(tPhase); onEnd(p); }
+  },1000);
 }
 
-function onPhaseEnd(phase) {
-  if (phase === 'cum-go') {
-    // time ran out → ruined/no cum
-    showResult('ruin');
-    return;
-  }
-  if (phase === 'cum-no') {
-    showResult('denied');
-    return;
-  }
-
-  // check if we're in cum zone and game is ending soon
-  if (inCumZone && !cumDecided && totalSecondsLeft <= 0) {
-    decideCum();
-    return;
-  }
-
-  // normal phase rotation
-  if (inCumZone && !cumDecided && edgePct >= 85) {
-    decideCum();
-    return;
-  }
-
-  if (phase === 'go') startPhase('stop');
-  else startPhase('go');
+function onEnd(p) {
+  if (p==='cumgo') { end('ruin'); return; }
+  if (p==='cumno') { end('denied'); return; }
+  if (inCum && !cumDone && edgePct>=85) { decideCum(); return; }
+  startPhase(p==='go' ? 'stop' : 'go');
 }
 
 function decideCum() {
-  cumDecided = true;
-  clearInterval(gameTimer);
-  let willCum;
-  if (cfg.cum === 'yes') willCum = true;
-  else if (cfg.cum === 'no') willCum = false;
-  else willCum = Math.random() < 0.55;
-
-  if (willCum) startPhase('cum-go');
-  else startPhase('cum-no');
+  if (cumDone) return;
+  cumDone = true;
+  clearInterval(tGame);
+  const will = cfg.cum==='yes' ? true : cfg.cum==='no' ? false : Math.random()<0.6;
+  startPhase(will ? 'cumgo' : 'cumno');
 }
 
-// edge bar
-function startEdgeTicker() {
-  clearInterval(edgeTicker);
-  edgeTicker = setInterval(() => {
-    const d = DIFFICULTY[cfg.difficulty];
-    if (currentPhase === 'go') {
-      edgePct = Math.min(100, edgePct + d.edgeSpeed);
-    } else if (currentPhase === 'stop') {
-      edgePct = Math.max(0, edgePct - d.edgeDrop);
-    }
-
-    const fill = document.getElementById('edge-fill');
-    fill.style.width = edgePct + '%';
-    document.getElementById('edge-pct').textContent = Math.round(edgePct) + '%';
-
-    // color edge bar based on position
-    if (edgePct >= 85) {
-      fill.style.background = 'linear-gradient(90deg, #9c27b0, #ff1744, gold)';
-    } else if (edgePct >= 60) {
-      fill.style.background = 'linear-gradient(90deg, #2196f3, #e91e63)';
-    } else {
-      fill.style.background = 'linear-gradient(90deg, #2196f3, #9c27b0)';
-    }
-
-    // enter cum zone
-    if (edgePct >= 85 && !inCumZone) {
-      inCumZone = true;
-    }
-
-    // trigger cum decision when game time is up and we're in cum zone
-    if (totalSecondsLeft <= 0 && inCumZone && !cumDecided
-        && currentPhase !== 'cum-go' && currentPhase !== 'cum-no') {
-      decideCum();
-    }
-  }, 800);
+function edgeTick() {
+  clearInterval(tEdge);
+  tEdge = setInterval(()=>{
+    const d = DIFF[cfg.dif];
+    if (phase==='go')   edgePct = Math.min(100, edgePct+d.rate);
+    if (phase==='stop') edgePct = Math.max(0,   edgePct-d.drop);
+    setBar();
+    if (edgePct>=85 && !inCum) inCum = true;
+    if (!totalLeft && inCum && !cumDone && phase!=='cumgo' && phase!=='cumno') decideCum();
+  },800);
 }
 
-function endGame() {
-  clearInterval(gameTimer);
-  clearInterval(phaseTimer);
-  clearInterval(edgeTicker);
-  showResult('quit');
+function setBar() {
+  const fill = document.getElementById('bar-fill');
+  fill.style.width = edgePct+'%';
+  document.getElementById('bar-pct').textContent = Math.round(edgePct)+'%';
+  if (edgePct>=85)
+    fill.style.background = 'linear-gradient(90deg,#7b00ff,#ff1744,gold)';
+  else if (edgePct>=55)
+    fill.style.background = 'linear-gradient(90deg,#005cff,#c2185b)';
+  else
+    fill.style.background = 'linear-gradient(90deg,#005cff,#7b00ff)';
 }
+
+function clearAll() {
+  clearInterval(tGame); clearInterval(tPhase); clearInterval(tEdge);
+}
+
+function end(type) { clearAll(); showResult(type); }
 
 function showResult(type) {
-  clearInterval(gameTimer);
-  clearInterval(phaseTimer);
-  clearInterval(edgeTicker);
-  document.body.className = '';
-
-  const icon  = document.getElementById('result-icon');
-  const title = document.getElementById('result-title');
-  const msg   = document.getElementById('result-msg');
-
-  if (type === 'cum-go') {
-    // shouldn't reach here; handled inside onPhaseEnd
-  }
-
-  const results = {
-    quit: {
-      icon:'🛑', title:'หยุดกลางทาง',
-      msg:'คุณออกจากเกมก่อนเวลา\nลองใหม่อีกครั้งแล้วฝืนใจให้ถึงที่สุด!'
-    },
-    ruin: {
-      icon:'😤', title:'รูนอร์กาซึม!',
-      msg:'เวลาหมดแล้ว ให้น้ำอสุจิไหลลงมาเองโดยไม่แตะอีกต่อไป\nนี่คือบทเรียนสำหรับการกลั้น — ลองใหม่ครั้งถัดไปให้ดีกว่านี้!'
-    },
-    denied: {
-      icon:'😈', title:'ถูกปฏิเสธ!',
-      msg:'ไม่ใช่วันนี้! ร่างกายของคุณกำลังเผาไหม้อยู่\nเอาไว้ค่อยมาลองใหม่ — ความอยากที่ค้างอยู่จะทำให้ครั้งถัดไปดีกว่าเดิม!'
-    },
-    success: {
-      icon:'🎉', title:'ยอดเยี่ยม!',
-      msg:'คุณฝึกการกลั้นได้สำเร็จ!\nในครั้งถัดไป ลองเพิ่มระยะเวลาหรือความยากขึ้นอีก'
-    }
+  document.body.className='';
+  const R = {
+    success: { icon:'🎉', title:'NICE!!',    msg:'ผ่านแล้ว 🔥\nครั้งหน้าลองเพิ่ม level หรือเวลาขึ้นอีกนะ 😏' },
+    ruin:    { icon:'😤', title:'RUINED',    msg:'หมดเวลา — เอามือออก แล้วให้ไหลเองนะ\nนั่นแหละคือรูนอร์กาซึม 💀\nทำให้ดีกว่านี้ในครั้งถัดไป' },
+    denied:  { icon:'😈', title:'DENIED!!',  msg:'ไม่ใช่วันนี้ bro\nความอยากที่ค้างอยู่จะทำให้\nครั้งถัดไปสุดกว่าเดิม 🔥' },
+    quit:    { icon:'🏳️',  title:'ยอมแพ้',   msg:'แค่นี้เองเหรอ?\nลองใหม่แล้วทนให้นานกว่านี้ 🙄' },
   };
-
-  // map phase end to result
-  if (type === 'cum-go-success') type = 'success';
-
-  const r = results[type] || results.quit;
-  icon.textContent  = r.icon;
-  title.textContent = r.title;
-  msg.textContent   = r.msg;
-
-  showScreen('result-screen');
+  const r = R[type]||R.quit;
+  document.getElementById('res-icon').textContent  = r.icon;
+  document.getElementById('res-title').textContent = r.title;
+  document.getElementById('res-msg').textContent   = r.msg;
+  show('result');
 }
-
-// listen for cum-go phase ending (time ran out naturally inside onPhaseEnd → 'ruin')
-// patch onPhaseEnd for cum-go success: when player clicks "ถึงแล้ว" — but we keep it simple: timer = success window
-// Override: when cum-go phase ends naturally, it's a ruin (can't cum in time)
-// We already handle this above.
-
-// Add touch/click to confirm cum during cum-go phase
-document.getElementById('game-screen').addEventListener('click', e => {
-  if (e.target.id === 'quit-btn') return;
-  if (currentPhase === 'cum-go') {
-    clearInterval(phaseTimer);
-    clearInterval(edgeTicker);
-    clearInterval(gameTimer);
-    showResult('success');
-  }
-});
 </script>
 </body>
 </html>
