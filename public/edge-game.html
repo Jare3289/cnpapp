@@ -416,11 +416,45 @@ body.bg-cumno { background:#330010; }
 
 <script>
 // ─── CONFIG ───────────────────────────────────────────────────────────────
-const DIFF = {
-  easy:    { goMin:30, goMax:60,  stopMin:6,  stopMax:16, rate:0.75, drop:0.18 },
-  normal:  { goMin:18, goMax:36,  stopMin:12, stopMax:28, rate:0.52, drop:0.32 },
-  hard:    { goMin:9,  goMax:20,  stopMin:18, stopMax:42, rate:0.38, drop:0.48 },
-  extreme: { goMin:4,  goMax:12,  stopMin:26, stopMax:58, rate:0.28, drop:0.6  },
+// ─── CONFIG (based on sexual response cycle research) ─────────────────────
+// 3 stages map to physiological phases:
+//   early  = Excitement phase  (edgePct 0–40%)   — warm up, long GO
+//   mid    = Plateau phase     (edgePct 40–72%)  — Start-Stop training
+//   late   = Pre-orgasm        (edgePct 72–85%)  — short GO, long STOP, maximum edge
+
+const PHASE_TIMING = {
+  easy: {
+    early: { goMin:40, goMax:72, stopMin:5,  stopMax:13 },
+    mid:   { goMin:22, goMax:42, stopMin:11, stopMax:22 },
+    late:  { goMin:12, goMax:22, stopMin:18, stopMax:34 },
+  },
+  normal: {
+    early: { goMin:28, goMax:54, stopMin:7,  stopMax:17 },
+    mid:   { goMin:14, goMax:28, stopMin:15, stopMax:30 },
+    late:  { goMin:7,  goMax:15, stopMin:24, stopMax:44 },
+  },
+  hard: {
+    early: { goMin:18, goMax:36, stopMin:11, stopMax:22 },
+    mid:   { goMin:8,  goMax:18, stopMin:22, stopMax:40 },
+    late:  { goMin:4,  goMax:10, stopMin:34, stopMax:58 },
+  },
+  extreme: {
+    early: { goMin:10, goMax:22, stopMin:15, stopMax:28 },
+    mid:   { goMin:5,  goMax:12, stopMin:28, stopMax:52 },
+    late:  { goMin:3,  goMax:7,  stopMin:44, stopMax:76 },
+  },
+};
+
+// Bar fills slower and drops faster as arousal climbs (harder to hold plateau)
+const EDGE_RATE = {
+  early: { easy:0.88, normal:0.64, hard:0.46, extreme:0.32 },
+  mid:   { easy:0.60, normal:0.42, hard:0.30, extreme:0.20 },
+  late:  { easy:0.40, normal:0.28, hard:0.18, extreme:0.12 },
+};
+const EDGE_DROP = {
+  early: { easy:0.12, normal:0.20, hard:0.30, extreme:0.42 },
+  mid:   { easy:0.24, normal:0.38, hard:0.54, extreme:0.70 },
+  late:  { easy:0.42, normal:0.60, hard:0.84, extreme:1.10 },
 };
 
 // taunts แบ่ง 3 ช่วงตาม edgePct: early <40, mid 40-72, late >72
@@ -734,7 +768,7 @@ function globalTick() {
 function startPhase(p) {
   clearInterval(tPhase);
   phase = p;
-  const d = DIFF[cfg.dif];
+  const d = PHASE_TIMING[cfg.dif][getStage()];
   const gEl = document.getElementById('game');
 
   let secs, word, taunt;
@@ -817,9 +851,9 @@ function decideCum() {
 function edgeTick() {
   clearInterval(tEdge);
   tEdge = setInterval(()=>{
-    const d = DIFF[cfg.dif];
-    if (phase==='go')   edgePct = Math.min(100, edgePct+d.rate);
-    if (phase==='stop') edgePct = Math.max(0,   edgePct-d.drop);
+    const st = getStage();
+    if (phase==='go')   edgePct = Math.min(100, edgePct + EDGE_RATE[st][cfg.dif]);
+    if (phase==='stop') edgePct = Math.max(0,   edgePct - EDGE_DROP[st][cfg.dif]);
     setBar();
     if (edgePct>=85 && !inCum) inCum = true;
     if (!totalLeft && inCum && !cumDone && phase!=='cumgo' && phase!=='cumno') decideCum();
