@@ -351,6 +351,9 @@ body.bg-cumno { background:#330010; }
   </div>
 
   <button id="go-btn">START 🔥</button>
+  <div id="sound-status" style="font-size:0.7rem;color:#222;text-align:center;letter-spacing:1px;">
+    🔇 กด START แล้วเสียงจะเปิด · iPad ไม่รองรับการสั่น
+  </div>
 </div>
 
 <!-- ── GAME ── -->
@@ -429,12 +432,21 @@ let audioCtx = null;
 
 // ─── AUDIO ────────────────────────────────────────────────────────────────
 function initAudio() {
-  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  // unlock iOS: play a silent buffer immediately inside the user-gesture stack
+  const buf = audioCtx.createBuffer(1, 1, 22050);
+  const src = audioCtx.createBufferSource();
+  src.buffer = buf;
+  src.connect(audioCtx.destination);
+  src.start(0);
+  if (audioCtx.state === 'suspended') audioCtx.resume();
 }
 
 function tone(freq, dur, type='sine', vol=0.28, delay=0) {
   if (!audioCtx) return;
   try {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
     const now = audioCtx.currentTime + delay;
     const o = audioCtx.createOscillator();
     const g = audioCtx.createGain();
@@ -489,6 +501,8 @@ function show(id) {
 // ─── START ────────────────────────────────────────────────────────────────
 document.getElementById('go-btn').addEventListener('click', () => {
   initAudio();
+  // play test beep so user knows audio is unlocked
+  tone(440, 0.08, 'sine', 0.15);
   cfg.dur = parseInt(document.querySelector('#dur .on').dataset.v);
   cfg.dif = document.querySelector('#dif .on').dataset.v;
   cfg.cum = document.querySelector('#cum .on').dataset.v;
