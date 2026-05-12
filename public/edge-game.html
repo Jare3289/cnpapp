@@ -342,11 +342,11 @@ body.bg-cumno { background:#330010; }
   </div>
 
   <div class="grp">
-    <div class="grp-label">อยากแตกไหม?</div>
+    <div class="grp-label">อยากถึงจุดสุดยอดไหม?</div>
     <div class="row" id="cum">
       <div class="opt on" data-v="yes">อยากแตก</div>
       <div class="opt" data-v="random">ตามใจเกม</div>
-      <div class="opt" data-v="no">no nut 🚫</div>
+      <div class="opt" data-v="no">ไม่แตก 🚫</div>
     </div>
   </div>
 
@@ -402,19 +402,20 @@ const TAUNTS = {
     'ช้าๆ อย่าแตกนะ...',
     'ทนได้ไหมเนี่ย? 👀',
     'อย่าหยุด... แต่ห้ามแตก',
-    'เพิ่ม speed หน่อยก็ได้',
-    'เก่งมาก... ยังไม่ถึงเวลา',
-    'ใกล้แล้ว... ทนหน่อย',
-    'เยี่ยม — แต่อย่าพลาด',
+    'ใกล้จุดสุดยอดแล้ว ทนหน่อย',
+    'เก่งมาก... ยังไม่ถึงเวลาแตก',
+    'อย่าเพิ่งแตก!! ยังไม่ได้รับอนุญาต',
+    'เยี่ยม — กลั้นจุดสุดยอดไว้ก่อน',
+    'เพิ่ม speed ได้ แต่ห้ามแตกเด็ดขาด',
   ],
   stop: [
     'มือออก!! ด่วน!!',
     'อย่าแตะ!!',
     'กล้าแตะมั้ย? 😈',
     'ทนดูซิ...',
-    'หายใจลึกๆ',
+    'หายใจลึกๆ ห้ามแตก',
     'วางลง!! เดี๋ยวนี้!!',
-    'ห้ามแตะ!!',
+    'จุดสุดยอดยังไม่ถึง — มือออก!!',
   ],
 };
 
@@ -565,7 +566,7 @@ function startPhase(p) {
   } else if (p==='cumgo') {
     secs  = rand(12,20);
     word  = 'CUM!!';
-    taunt = `แตะหน้าจอภายใน ${secs} วิ!!`;
+    taunt = `แตะหน้าจอเพื่อถึงจุดสุดยอด — เหลือ ${secs} วิ!!`;
     gEl.className = 'screen active s-cumgo';
     document.body.className = 'bg-cumgo';
     flash('#00ff88',600);
@@ -646,10 +647,10 @@ function end(type) { clearAll(); showResult(type); }
 function showResult(type) {
   document.body.className='';
   const R = {
-    success: { icon:'🎉', title:'NICE!!',    msg:'ผ่านแล้ว 🔥\nครั้งหน้าลองเพิ่ม level หรือเวลาขึ้นอีกนะ 😏' },
-    ruin:    { icon:'😤', title:'RUINED',    msg:'หมดเวลา — เอามือออก แล้วให้ไหลเองนะ\nนั่นแหละคือรูนอร์กาซึม 💀\nทำให้ดีกว่านี้ในครั้งถัดไป' },
-    denied:  { icon:'😈', title:'DENIED!!',  msg:'ไม่ใช่วันนี้ bro\nความอยากที่ค้างอยู่จะทำให้\nครั้งถัดไปสุดกว่าเดิม 🔥' },
-    quit:    { icon:'🏳️',  title:'ยอมแพ้',   msg:'แค่นี้เองเหรอ?\nลองใหม่แล้วทนให้นานกว่านี้ 🙄' },
+    success: { icon:'🎉', title:'แตกแล้ว!!',  msg:'ถึงจุดสุดยอดสำเร็จ 🔥\nครั้งหน้าลองเพิ่ม level หรือเวลาขึ้นอีกนะ 😏' },
+    ruin:    { icon:'😤', title:'RUINED',    msg:'หมดเวลา — เอามือออก แล้วให้แตกเองนะ\nนั่นแหละคือจุดสุดยอดแบบรูน 💀\nครั้งหน้าต้องทำให้ดีกว่านี้' },
+    denied:  { icon:'😈', title:'DENIED!!',  msg:'ไม่ได้แตกวันนี้ bro\nความอยากที่ค้างไว้จะทำให้\nครั้งถัดไปถึงจุดสุดยอดแรงกว่าเดิม 🔥' },
+    quit:    { icon:'🏳️',  title:'ยอมแพ้',   msg:'แค่นี้เองเหรอ?\nลองใหม่แล้วทนจุดสุดยอดให้นานกว่านี้ 🙄' },
   };
   const r = R[type]||R.quit;
   document.getElementById('res-icon').textContent  = r.icon;
