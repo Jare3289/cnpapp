@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Edge Challenge</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #111;
+    color: #eee;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.5s ease;
+    user-select: none;
+  }
+
+  /* ── screens ── */
+  .screen { display: none; width: 100%; max-width: 480px; padding: 24px; }
+  .screen.active { display: flex; flex-direction: column; gap: 20px; }
+
+  /* ── setup screen ── */
+  h1 { font-size: 2rem; text-align: center; letter-spacing: 2px; }
+  .subtitle { text-align: center; color: #888; font-size: 0.9rem; }
+
+  .option-group label {
+    display: block;
+    font-size: 0.8rem;
+    color: #999;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .btn-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .opt-btn {
+    flex: 1;
+    padding: 10px 6px;
+    border: 2px solid #333;
+    border-radius: 8px;
+    background: #1a1a1a;
+    color: #ccc;
+    cursor: pointer;
+    font-size: 0.85rem;
+    text-align: center;
+    transition: all 0.2s;
+  }
+  .opt-btn:hover { border-color: #555; }
+  .opt-btn.selected { border-color: #4caf50; color: #4caf50; background: #0d2010; }
+
+  .start-btn {
+    padding: 16px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    border: none;
+    border-radius: 10px;
+    background: #2e7d32;
+    color: #fff;
+    cursor: pointer;
+    letter-spacing: 2px;
+    transition: background 0.2s;
+  }
+  .start-btn:hover { background: #388e3c; }
+
+  /* ── game screen ── */
+  #game-screen {
+    align-items: center;
+    text-align: center;
+    gap: 24px;
+    min-height: 100vh;
+    justify-content: center;
+  }
+
+  #phase-label {
+    font-size: 2.6rem;
+    font-weight: 900;
+    letter-spacing: 4px;
+    text-shadow: 0 0 30px currentColor;
+    transition: color 0.4s;
+  }
+
+  #phase-timer {
+    font-size: 1rem;
+    color: #aaa;
+    letter-spacing: 1px;
+  }
+
+  /* edge bar */
+  .bar-wrapper { width: 100%; }
+  .bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: #888;
+    margin-bottom: 6px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  #edge-track {
+    width: 100%;
+    height: 22px;
+    background: #1a1a1a;
+    border-radius: 11px;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid #333;
+  }
+
+  #edge-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 11px;
+    transition: width 0.8s linear, background 0.4s;
+    background: linear-gradient(90deg, #2196f3, #9c27b0);
+  }
+
+  #cum-zone {
+    position: absolute;
+    top: 0; bottom: 0;
+    right: 0;
+    width: 15%;
+    background: rgba(255,215,0,0.15);
+    border-left: 2px dashed gold;
+  }
+
+  #cum-zone-label {
+    position: absolute;
+    top: 50%;
+    right: 6px;
+    transform: translateY(-50%);
+    font-size: 0.6rem;
+    color: gold;
+    letter-spacing: 1px;
+    font-weight: bold;
+  }
+
+  /* phase-change flash overlay */
+  #flash {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  /* instruction box */
+  #instruction {
+    font-size: 1.3rem;
+    font-weight: bold;
+    padding: 16px 24px;
+    border-radius: 12px;
+    letter-spacing: 1px;
+    transition: all 0.4s;
+  }
+
+  /* total timer */
+  #total-timer {
+    font-size: 0.85rem;
+    color: #666;
+  }
+
+  .stop-btn {
+    padding: 10px 28px;
+    border: 2px solid #333;
+    border-radius: 8px;
+    background: transparent;
+    color: #555;
+    cursor: pointer;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+  }
+  .stop-btn:hover { border-color: #666; color: #888; }
+
+  /* ── result screen ── */
+  #result-screen { align-items: center; text-align: center; }
+
+  #result-icon { font-size: 5rem; }
+  #result-title { font-size: 2rem; font-weight: bold; }
+  #result-msg { color: #aaa; line-height: 1.6; font-size: 0.95rem; }
+
+  .again-btn {
+    padding: 14px 40px;
+    border: none;
+    border-radius: 10px;
+    background: #1565c0;
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+    letter-spacing: 2px;
+    transition: background 0.2s;
+  }
+  .again-btn:hover { background: #1976d2; }
+
+  /* body state classes */
+  body.go      { background: #0a1f0a; }
+  body.stop    { background: #1f0a0a; }
+  body.cum-go  { background: #00c853; }
+  body.cum-no  { background: #d50000; }
+</style>
+</head>
+<body>
+
+<!-- SETUP -->
+<div class="screen active" id="setup-screen">
+  <h1>EDGE CHALLENGE</h1>
+  <p class="subtitle">ฝึกการกลั้น · เพิ่มความสุขสูงสุด</p>
+
+  <div class="option-group">
+    <label>ระยะเวลา</label>
+    <div class="btn-group" id="dur-group">
+      <div class="opt-btn selected" data-val="5">สั้น<br><small>5 นาที</small></div>
+      <div class="opt-btn" data-val="10">ปกติ<br><small>10 นาที</small></div>
+      <div class="opt-btn" data-val="20">ยาว<br><small>20 นาที</small></div>
+    </div>
+  </div>
+
+  <div class="option-group">
+    <label>ระดับความยาก</label>
+    <div class="btn-group" id="diff-group">
+      <div class="opt-btn" data-val="easy">ง่าย</div>
+      <div class="opt-btn selected" data-val="normal">ปกติ</div>
+      <div class="opt-btn" data-val="hard">ยาก</div>
+      <div class="opt-btn" data-val="extreme">สุดขีด</div>
+    </div>
+  </div>
+
+  <div class="option-group">
+    <label>อยากถึงจุดสุดยอดไหม?</label>
+    <div class="btn-group" id="cum-group">
+      <div class="opt-btn selected" data-val="yes">ได้เลย</div>
+      <div class="opt-btn" data-val="random">ตามใจเกม</div>
+      <div class="opt-btn" data-val="no">ไม่ (รูนอร์กาซึม)</div>
+    </div>
+  </div>
+
+  <button class="start-btn" id="start-btn">▶ เริ่มเกม</button>
+</div>
+
+<!-- GAME -->
+<div class="screen" id="game-screen">
+  <div id="total-timer">เวลาที่เหลือ: --:--</div>
+
+  <div id="phase-label">---</div>
+  <div id="phase-timer"></div>
+
+  <div id="instruction">รอสักครู่...</div>
+
+  <div class="bar-wrapper">
+    <div class="bar-label">
+      <span>EDGE</span>
+      <span id="edge-pct">0%</span>
+    </div>
+    <div id="edge-track">
+      <div id="edge-fill"></div>
+      <div id="cum-zone"><span id="cum-zone-label">CUM</span></div>
+    </div>
+  </div>
+
+  <button class="stop-btn" id="quit-btn">หยุดเกม</button>
+</div>
+
+<!-- RESULT -->
+<div class="screen" id="result-screen">
+  <div id="result-icon"></div>
+  <div id="result-title"></div>
+  <div id="result-msg"></div>
+  <button class="again-btn" id="again-btn">เล่นอีกครั้ง</button>
+</div>
+
+<div id="flash"></div>
+
+<script>
+// ── CONFIG ──────────────────────────────────────────────────────────────────
+const DIFFICULTY = {
+  easy:    { goMin:30, goMax:60,  stopMin:8,  stopMax:18, edgeSpeed:0.7, edgeDrop:0.2 },
+  normal:  { goMin:20, goMax:40,  stopMin:12, stopMax:28, edgeSpeed:0.5, edgeDrop:0.3 },
+  hard:    { goMin:10, goMax:22,  stopMin:18, stopMax:38, edgeSpeed:0.4, edgeDrop:0.4 },
+  extreme: { goMin:5,  goMax:14,  stopMin:28, stopMax:55, edgeSpeed:0.3, edgeDrop:0.5 },
+};
+
+// ── STATE ────────────────────────────────────────────────────────────────────
+let cfg = { duration: 5, difficulty: 'normal', cum: 'yes' };
+let gameTimer, phaseTimer, edgeTicker;
+let totalSecondsLeft, phaseSecondsLeft;
+let edgePct = 0;
+let currentPhase = 'go'; // 'go' | 'stop' | 'cum-go' | 'cum-no'
+let inCumZone = false;
+let cumDecided = false;
+let cumCountdown = 0;
+
+// ── UTILS ────────────────────────────────────────────────────────────────────
+function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function fmt(s) {
+  const m = Math.floor(s / 60);
+  return `${String(m).padStart(2,'0')}:${String(s % 60).padStart(2,'0')}`;
+}
+function flash(color, ms=300) {
+  const el = document.getElementById('flash');
+  el.style.background = color;
+  el.style.opacity = '0.35';
+  setTimeout(() => { el.style.opacity = '0'; }, ms);
+}
+
+// ── SETUP UI ─────────────────────────────────────────────────────────────────
+['dur-group','diff-group','cum-group'].forEach(id => {
+  document.getElementById(id).addEventListener('click', e => {
+    const btn = e.target.closest('.opt-btn');
+    if (!btn) return;
+    btn.parentElement.querySelectorAll('.opt-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+  });
+});
+
+document.getElementById('start-btn').addEventListener('click', () => {
+  cfg.duration   = parseInt(document.querySelector('#dur-group .selected').dataset.val);
+  cfg.difficulty = document.querySelector('#diff-group .selected').dataset.val;
+  cfg.cum        = document.querySelector('#cum-group .selected').dataset.val;
+  startGame();
+});
+
+document.getElementById('quit-btn').addEventListener('click', endGame);
+document.getElementById('again-btn').addEventListener('click', () => {
+  showScreen('setup-screen');
+  document.body.className = '';
+});
+
+// ── SCREEN SWITCHER ──────────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ── GAME LOGIC ───────────────────────────────────────────────────────────────
+function startGame() {
+  edgePct = 0;
+  inCumZone = false;
+  cumDecided = false;
+  totalSecondsLeft = cfg.duration * 60;
+  showScreen('game-screen');
+  startPhase('go');
+  startGlobalTimer();
+  startEdgeTicker();
+}
+
+function startGlobalTimer() {
+  clearInterval(gameTimer);
+  gameTimer = setInterval(() => {
+    totalSecondsLeft--;
+    document.getElementById('total-timer').textContent = `เวลาที่เหลือ: ${fmt(totalSecondsLeft)}`;
+    if (totalSecondsLeft <= 0) {
+      clearInterval(gameTimer);
+      if (!inCumZone) endGame();
+    }
+  }, 1000);
+}
+
+function startPhase(phase) {
+  clearInterval(phaseTimer);
+  currentPhase = phase;
+  const d = DIFFICULTY[cfg.difficulty];
+
+  let phaseSecs, label, instruction, bodyClass;
+
+  if (phase === 'go') {
+    phaseSecs = rand(d.goMin, d.goMax);
+    label = '♥ GO';
+    instruction = '🟢 ชักว่าวได้เลย — ห้ามถึงจุดสุดยอด!';
+    bodyClass = 'go';
+    flash('#00ff00');
+  } else if (phase === 'stop') {
+    phaseSecs = rand(d.stopMin, d.stopMax);
+    label = '✋ STOP';
+    instruction = '🔴 หยุดมือ! อย่าแตะเลย!';
+    bodyClass = 'stop';
+    flash('#ff0000');
+  } else if (phase === 'cum-go') {
+    phaseSecs = rand(10, 20);
+    label = '💦 CUM!';
+    instruction = `🌟 ถึงจุดสุดยอดได้เลย! มีเวลา ${phaseSecs} วินาที!`;
+    bodyClass = 'cum-go';
+    flash('#00ff00', 800);
+  } else if (phase === 'cum-no') {
+    phaseSecs = 8;
+    label = '🚫 DENIED';
+    instruction = '😈 ไม่ใช่วันนี้! มือออกจากอวัยวะเพศ!';
+    bodyClass = 'cum-no';
+    flash('#ff0000', 800);
+  }
+
+  document.body.className = bodyClass;
+  document.getElementById('phase-label').textContent = label;
+  document.getElementById('instruction').textContent = instruction;
+  phaseSecondsLeft = phaseSecs;
+  document.getElementById('phase-timer').textContent = `${phaseSecondsLeft}s`;
+
+  phaseTimer = setInterval(() => {
+    phaseSecondsLeft--;
+    document.getElementById('phase-timer').textContent = `${phaseSecondsLeft}s`;
+    if (phaseSecondsLeft <= 0) {
+      clearInterval(phaseTimer);
+      onPhaseEnd(phase);
+    }
+  }, 1000);
+}
+
+function onPhaseEnd(phase) {
+  if (phase === 'cum-go') {
+    // time ran out → ruined/no cum
+    showResult('ruin');
+    return;
+  }
+  if (phase === 'cum-no') {
+    showResult('denied');
+    return;
+  }
+
+  // check if we're in cum zone and game is ending soon
+  if (inCumZone && !cumDecided && totalSecondsLeft <= 0) {
+    decideCum();
+    return;
+  }
+
+  // normal phase rotation
+  if (inCumZone && !cumDecided && edgePct >= 85) {
+    decideCum();
+    return;
+  }
+
+  if (phase === 'go') startPhase('stop');
+  else startPhase('go');
+}
+
+function decideCum() {
+  cumDecided = true;
+  clearInterval(gameTimer);
+  let willCum;
+  if (cfg.cum === 'yes') willCum = true;
+  else if (cfg.cum === 'no') willCum = false;
+  else willCum = Math.random() < 0.55;
+
+  if (willCum) startPhase('cum-go');
+  else startPhase('cum-no');
+}
+
+// edge bar
+function startEdgeTicker() {
+  clearInterval(edgeTicker);
+  edgeTicker = setInterval(() => {
+    const d = DIFFICULTY[cfg.difficulty];
+    if (currentPhase === 'go') {
+      edgePct = Math.min(100, edgePct + d.edgeSpeed);
+    } else if (currentPhase === 'stop') {
+      edgePct = Math.max(0, edgePct - d.edgeDrop);
+    }
+
+    const fill = document.getElementById('edge-fill');
+    fill.style.width = edgePct + '%';
+    document.getElementById('edge-pct').textContent = Math.round(edgePct) + '%';
+
+    // color edge bar based on position
+    if (edgePct >= 85) {
+      fill.style.background = 'linear-gradient(90deg, #9c27b0, #ff1744, gold)';
+    } else if (edgePct >= 60) {
+      fill.style.background = 'linear-gradient(90deg, #2196f3, #e91e63)';
+    } else {
+      fill.style.background = 'linear-gradient(90deg, #2196f3, #9c27b0)';
+    }
+
+    // enter cum zone
+    if (edgePct >= 85 && !inCumZone) {
+      inCumZone = true;
+    }
+
+    // trigger cum decision when game time is up and we're in cum zone
+    if (totalSecondsLeft <= 0 && inCumZone && !cumDecided
+        && currentPhase !== 'cum-go' && currentPhase !== 'cum-no') {
+      decideCum();
+    }
+  }, 800);
+}
+
+function endGame() {
+  clearInterval(gameTimer);
+  clearInterval(phaseTimer);
+  clearInterval(edgeTicker);
+  showResult('quit');
+}
+
+function showResult(type) {
+  clearInterval(gameTimer);
+  clearInterval(phaseTimer);
+  clearInterval(edgeTicker);
+  document.body.className = '';
+
+  const icon  = document.getElementById('result-icon');
+  const title = document.getElementById('result-title');
+  const msg   = document.getElementById('result-msg');
+
+  if (type === 'cum-go') {
+    // shouldn't reach here; handled inside onPhaseEnd
+  }
+
+  const results = {
+    quit: {
+      icon:'🛑', title:'หยุดกลางทาง',
+      msg:'คุณออกจากเกมก่อนเวลา\nลองใหม่อีกครั้งแล้วฝืนใจให้ถึงที่สุด!'
+    },
+    ruin: {
+      icon:'😤', title:'รูนอร์กาซึม!',
+      msg:'เวลาหมดแล้ว ให้น้ำอสุจิไหลลงมาเองโดยไม่แตะอีกต่อไป\nนี่คือบทเรียนสำหรับการกลั้น — ลองใหม่ครั้งถัดไปให้ดีกว่านี้!'
+    },
+    denied: {
+      icon:'😈', title:'ถูกปฏิเสธ!',
+      msg:'ไม่ใช่วันนี้! ร่างกายของคุณกำลังเผาไหม้อยู่\nเอาไว้ค่อยมาลองใหม่ — ความอยากที่ค้างอยู่จะทำให้ครั้งถัดไปดีกว่าเดิม!'
+    },
+    success: {
+      icon:'🎉', title:'ยอดเยี่ยม!',
+      msg:'คุณฝึกการกลั้นได้สำเร็จ!\nในครั้งถัดไป ลองเพิ่มระยะเวลาหรือความยากขึ้นอีก'
+    }
+  };
+
+  // map phase end to result
+  if (type === 'cum-go-success') type = 'success';
+
+  const r = results[type] || results.quit;
+  icon.textContent  = r.icon;
+  title.textContent = r.title;
+  msg.textContent   = r.msg;
+
+  showScreen('result-screen');
+}
+
+// listen for cum-go phase ending (time ran out naturally inside onPhaseEnd → 'ruin')
+// patch onPhaseEnd for cum-go success: when player clicks "ถึงแล้ว" — but we keep it simple: timer = success window
+// Override: when cum-go phase ends naturally, it's a ruin (can't cum in time)
+// We already handle this above.
+
+// Add touch/click to confirm cum during cum-go phase
+document.getElementById('game-screen').addEventListener('click', e => {
+  if (e.target.id === 'quit-btn') return;
+  if (currentPhase === 'cum-go') {
+    clearInterval(phaseTimer);
+    clearInterval(edgeTicker);
+    clearInterval(gameTimer);
+    showResult('success');
+  }
+});
+</script>
+</body>
+</html>
