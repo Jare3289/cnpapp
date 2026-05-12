@@ -350,6 +350,16 @@ body.bg-cumno { background:#330010; }
     </div>
   </div>
 
+  <div class="grp">
+    <div class="grp-label">น้ำเสียงของเกม</div>
+    <div class="row" id="voice">
+      <div class="opt on" data-v="lover">แฟน 💕</div>
+      <div class="opt" data-v="formal">ทางการ 📋</div>
+      <div class="opt" data-v="wild">ดิบเถื่อน 🔥</div>
+      <div class="opt" data-v="fun">สนุกสนาน 😜</div>
+    </div>
+  </div>
+
   <button id="go-btn">START 🔥</button>
   <div id="sound-status" style="font-size:0.7rem;color:#222;text-align:center;letter-spacing:1px;">
     🔇 กด START แล้วเสียงจะเปิด · iPad ไม่รองรับการสั่น
@@ -400,30 +410,121 @@ const DIFF = {
   extreme: { goMin:4,  goMax:12,  stopMin:26, stopMax:58, rate:0.28, drop:0.6  },
 };
 
-const TAUNTS = {
-  go: [
-    'ช้าๆ อย่าแตกนะ...',
-    'ทนได้ไหมเนี่ย? 👀',
-    'อย่าหยุด... แต่ห้ามแตก',
-    'ใกล้จุดสุดยอดแล้ว ทนหน่อย',
-    'เก่งมาก... ยังไม่ถึงเวลาแตก',
-    'อย่าเพิ่งแตก!! ยังไม่ได้รับอนุญาต',
-    'เยี่ยม — กลั้นจุดสุดยอดไว้ก่อน',
-    'เพิ่ม speed ได้ แต่ห้ามแตกเด็ดขาด',
-  ],
-  stop: [
-    'มือออก!! ด่วน!!',
-    'อย่าแตะ!!',
-    'กล้าแตะมั้ย? 😈',
-    'ทนดูซิ...',
-    'หายใจลึกๆ ห้ามแตก',
-    'วางลง!! เดี๋ยวนี้!!',
-    'จุดสุดยอดยังไม่ถึง — มือออก!!',
-  ],
+const VOICES = {
+  lover: {
+    go: [
+      'ทำได้นะที่รัก... แต่อย่าแตกก่อนนะ',
+      'ช้าๆ ก็ได้ อย่าแตกนะที่รัก~',
+      'ใกล้จุดสุดยอดแล้วเหรอ? ทนหน่อยนะ',
+      'เก่งมากเลย... ยังไม่ถึงเวลาแตกนะ',
+      'หนูอยากให้ทน... อีกนิดเดียวเอง',
+      'อย่าเพิ่งแตกนะ ทำเพื่อหนูได้ไหม?',
+      'เยี่ยมเลย ที่รัก — กลั้นอีกนิดนึง',
+    ],
+    stop: [
+      'หยุดก่อนนะที่รัก...',
+      'เดี๋ยวค่อยต่อนะ ทนหน่อย',
+      'มือออกก่อนนะ~ หนูบอกแล้ว',
+      'อย่าแตะเลยนะ... ฟังหนูด้วย',
+      'ใจเย็นๆ นะที่รัก หายใจลึกๆ',
+      'ทนได้นะ... หนูเชื่อในตัวเธอ',
+    ],
+    cumgo: s => `แตกได้เลยนะที่รัก~ รีบเลย เหลือ ${s} วิ!!`,
+    cumno: 'ขอโทษนะที่รัก... ยังไม่ถึงเวลา',
+    results: {
+      success: { icon:'💕', title:'เก่งมากเลย!', msg:'แตกได้สำเร็จแล้วที่รัก\nหนูภูมิใจในตัวเธอมากเลยนะ 🥰' },
+      ruin:    { icon:'😢', title:'อ๊ะ...',       msg:'หมดเวลาแล้วนะ ให้แตกเองเลย\nไม่เป็นไรนะที่รัก ครั้งหน้าทำได้ดีกว่านี้แน่เลย' },
+      denied:  { icon:'😏', title:'ยังไม่ได้นะ~', msg:'ไม่ได้แตกวันนี้นะที่รัก\nหนูเก็บไว้ให้เธอคืนหน้านะ~ 💕' },
+      quit:    { icon:'🥺', title:'ทำไมหยุดอ่ะ', msg:'ทำไมหยุดเร็วจัง ที่รัก?\nลองใหม่ได้นะ หนูจะรออยู่' },
+    },
+  },
+
+  formal: {
+    go: [
+      'อนุญาตให้ดำเนินกิจกรรมต่อได้',
+      'กรุณาดำเนินการต่อ ห้ามถึงจุดสุดยอด',
+      'ดำเนินการได้ตามปกติ ห้ามสูญเสียการควบคุม',
+      'กิจกรรมได้รับอนุญาต ห้ามแตกก่อนเวลา',
+      'ใกล้ถึงจุดสุดยอดแล้ว กรุณาควบคุมตนเอง',
+      'กรุณาดำเนินต่อ และรักษาระดับการยับยั้งชั่งใจ',
+    ],
+    stop: [
+      'กรุณาหยุดทันที',
+      'ยุติการกระทำทั้งหมด ณ บัดนี้',
+      'ไม่อนุญาตให้สัมผัส',
+      'กรุณางดการกระทำดังกล่าว',
+      'รอการอนุมัติจากระบบ',
+      'ระงับกิจกรรมจนกว่าจะได้รับสัญญาณ',
+    ],
+    cumgo: s => `ได้รับอนุมัติให้ถึงจุดสุดยอดแล้ว — ดำเนินการภายใน ${s} วินาที`,
+    cumno: 'ไม่ผ่านเกณฑ์การอนุมัติ ห้ามถึงจุดสุดยอดในรอบนี้',
+    results: {
+      success: { icon:'✅', title:'ผ่านการประเมิน', msg:'ถึงจุดสุดยอดตามกำหนดเวลา\nผลการประเมิน: ผ่าน — ระดับ A' },
+      ruin:    { icon:'⚠️', title:'เกินเวลากำหนด', msg:'อนุญาตให้แตกโดยไม่สัมผัส\nบันทึกผล: รูนอร์กาซึม — กรุณาปรับปรุง' },
+      denied:  { icon:'🚫', title:'ไม่ผ่านเกณฑ์',  msg:'ไม่อนุญาตให้ถึงจุดสุดยอดในรอบนี้\nกรุณาเริ่มกระบวนการใหม่' },
+      quit:    { icon:'🏳️', title:'ยกเลิกกลางคัน', msg:'ยกเลิกการดำเนินการก่อนกำหนด\nกรุณาเริ่มกระบวนการใหม่อีกครั้ง' },
+    },
+  },
+
+  wild: {
+    go: [
+      'ลุยเลยไอ้สัตว์!!',
+      'เยี่ยม!! แต่ห้ามแตกก่อนไอ้ขี้แพ้!!',
+      'ทำต่อไป!! ห้ามแตกโดยเด็ดขาด!!',
+      'ใกล้จุดสุดยอดแล้วเหรอ? ทนให้ได้!!',
+      'แค่นี้เองใช่มั้ย? ทำให้หนักกว่านี้!!',
+      'อย่าเพิ่งแตกนะ!! ห้ามแตก!!',
+      'เก่งอยู่!! ทนจุดสุดยอดให้ได้ก่อน!!',
+    ],
+    stop: [
+      'หยุดเลย!! ตอนนี้เลย!!',
+      'มือออก!! ไม่งั้นเสียสิทธิ์!!',
+      'ห้ามแตะ!!! ฟังให้ดี!!',
+      'เดี๋ยวนี้!! วางมือลง!!',
+      'อย่าแตะ!! รีบหยุด!!',
+      'มือออก!! ไวๆ!!',
+    ],
+    cumgo: s => `แตกได้เลยไอ้สัตว์!! รีบ!! เหลือ ${s} วิ!!`,
+    cumno: 'ไม่ได้แตกวันนี้!! ไอ้ขี้แพ้!! มือออก!!',
+    results: {
+      success: { icon:'🔥', title:'ทำได้ไอ้สัตว์!!', msg:'แตกได้สำเร็จ!!\nครั้งหน้าลองโหดกว่านี้สิ ถ้าทำได้' },
+      ruin:    { icon:'😤', title:'RUINED!!',         msg:'หมดเวลา!! ให้แตกเองโดยไม่แตะ\nนั่นแหละสมน้ำหน้า ครั้งหน้าทำให้ดีกว่านี้' },
+      denied:  { icon:'😈', title:'ไม่ได้แตก!!',     msg:'ไม่ได้แตกวันนี้ ไอ้ขี้แพ้\nความอยากค้างอยู่นั่นแหละ ทรมานดีๆ' },
+      quit:    { icon:'🏳️', title:'ขี้ขลาดมาก',      msg:'แค่นี้เองเหรอ?! ขี้ขลาดสุดๆ\nกลับมาใหม่เมื่อพร้อมกว่านี้' },
+    },
+  },
+
+  fun: {
+    go: [
+      'ไปๆๆๆ!! สนุกมากกก!!',
+      'เยี่ยยย!! แต่อย่าแตกก่อนนะ lol',
+      'โอ้โห!! ทำต่อสิ อย่าหยุด~',
+      'ใกล้จุดสุดยอดแล้วเหรอ? ฮ่าๆ ทนหน่อย!!',
+      'เก่งมาก!! แต่ห้ามแตก อีกแป๊บเดียว~',
+      'วิ้ง!! ทำต่อๆ ห้ามแตกล่ะ!',
+      'มาๆๆ!! สู้ๆ ห้ามแตกก่อนนะ~',
+    ],
+    stop: [
+      'อ้าว หยุดก่อนนะ~ ฮ่า',
+      'เฮ้ย!! หยุด!! อย่าเพิ่ง lol',
+      'ไม่ได้นะ!! ยังก่อน~',
+      'หยุดๆๆ!! เร็วๆ!!',
+      'อย่าแตะก่อนนะ~ กลั้นได้!',
+      'เฮ้ย วางลงก่อน~~ ฮ่าๆ',
+    ],
+    cumgo: s => `เย้!! แตกได้แล้ว!! แตะหน้าจอเลย~ เหลือ ${s} วิ!!`,
+    cumno: 'อ้าว~ ไม่ได้แตกวันนี้ ฮ่าๆ มือออกนะ!!',
+    results: {
+      success: { icon:'🎉', title:'เย้!! แตกแล้ว!!', msg:'เก่งมากกกก!! ถึงจุดสุดยอดสำเร็จ!!\nครั้งหน้าลองยากขึ้นอีกนะ~' },
+      ruin:    { icon:'😂', title:'อุ๊ย RUINED!!',   msg:'หมดเวลา! ให้แตกเองเลยนะ ฮ่าๆ\nไม่เป็นไร ครั้งหน้าทำได้แน่เลย!' },
+      denied:  { icon:'😜', title:'อ้าว ไม่ได้~',   msg:'ไม่ได้แตกวันนี้~ เซ็งอยู่ใช่ไหม ฮ่า\nลองใหม่ได้เลยนะ~' },
+      quit:    { icon:'😅', title:'อ้าว ยอมแพ้~',   msg:'ยอมแพ้แล้วเหรอ~ ไม่เป็นไรนะ ฮ่าๆ\nลองใหม่ได้เลย สู้ๆ~' },
+    },
+  },
 };
 
 // ─── STATE ────────────────────────────────────────────────────────────────
-let cfg = { dur:10, dif:'normal', cum:'yes' };
+let cfg = { dur:10, dif:'normal', cum:'yes', voice:'lover' };
 let tGame, tPhase, tEdge;
 let totalLeft, phaseLeft, edgePct = 0;
 let phase = 'idle';
@@ -483,7 +584,7 @@ function flash(color, ms=220) {
 }
 
 // ─── OPTION BUTTONS ───────────────────────────────────────────────────────
-['dur','dif','cum'].forEach(id => {
+['dur','dif','cum','voice'].forEach(id => {
   document.getElementById(id).addEventListener('click', e => {
     const b = e.target.closest('.opt');
     if (!b) return;
@@ -503,9 +604,10 @@ document.getElementById('go-btn').addEventListener('click', () => {
   initAudio();
   // play test beep so user knows audio is unlocked
   tone(440, 0.08, 'sine', 0.15);
-  cfg.dur = parseInt(document.querySelector('#dur .on').dataset.v);
-  cfg.dif = document.querySelector('#dif .on').dataset.v;
-  cfg.cum = document.querySelector('#cum .on').dataset.v;
+  cfg.dur   = parseInt(document.querySelector('#dur .on').dataset.v);
+  cfg.dif   = document.querySelector('#dif .on').dataset.v;
+  cfg.cum   = document.querySelector('#cum .on').dataset.v;
+  cfg.voice = document.querySelector('#voice .on').dataset.v;
   startGame();
 });
 
@@ -554,10 +656,12 @@ function startPhase(p) {
 
   let secs, word, taunt;
 
+  const V = VOICES[cfg.voice];
+
   if (p==='go') {
     secs  = rand(d.goMin, d.goMax);
     word  = 'GO';
-    taunt = pick(TAUNTS.go);
+    taunt = pick(V.go);
     gEl.className = 'screen active s-go';
     document.body.className = 'bg-go';
     flash('#00ff88',180);
@@ -566,8 +670,7 @@ function startPhase(p) {
   } else if (p==='stop') {
     secs  = rand(d.stopMin, d.stopMax);
     word  = 'STOP';
-    taunt = pick(TAUNTS.stop);
-    // retrigger shake
+    taunt = pick(V.stop);
     const w = document.getElementById('ph-word');
     w.classList.remove('do-shake');
     void w.offsetWidth;
@@ -579,8 +682,8 @@ function startPhase(p) {
 
   } else if (p==='cumgo') {
     secs  = rand(12,20);
-    word  = 'CUM!!';
-    taunt = `แตะหน้าจอเพื่อถึงจุดสุดยอด — เหลือ ${secs} วิ!!`;
+    word  = 'แตก!!';
+    taunt = V.cumgo(secs);
     gEl.className = 'screen active s-cumgo';
     document.body.className = 'bg-cumgo';
     flash('#00ff88',600);
@@ -589,7 +692,7 @@ function startPhase(p) {
   } else if (p==='cumno') {
     secs  = 6;
     word  = 'NO!!';
-    taunt = 'ไม่ใช่วันนี้ 😈 มือออก!!';
+    taunt = V.cumno;
     gEl.className = 'screen active s-cumno';
     document.body.className = 'bg-cumno';
     flash('#ff2244',600);
@@ -660,13 +763,8 @@ function end(type) { clearAll(); showResult(type); }
 
 function showResult(type) {
   document.body.className='';
-  const R = {
-    success: { icon:'🎉', title:'แตกแล้ว!!',  msg:'ถึงจุดสุดยอดสำเร็จ 🔥\nครั้งหน้าลองเพิ่ม level หรือเวลาขึ้นอีกนะ 😏' },
-    ruin:    { icon:'😤', title:'RUINED',    msg:'หมดเวลา — เอามือออก แล้วให้แตกเองนะ\nนั่นแหละคือจุดสุดยอดแบบรูน 💀\nครั้งหน้าต้องทำให้ดีกว่านี้' },
-    denied:  { icon:'😈', title:'DENIED!!',  msg:'ไม่ได้แตกวันนี้ bro\nความอยากที่ค้างไว้จะทำให้\nครั้งถัดไปถึงจุดสุดยอดแรงกว่าเดิม 🔥' },
-    quit:    { icon:'🏳️',  title:'ยอมแพ้',   msg:'แค่นี้เองเหรอ?\nลองใหม่แล้วทนจุดสุดยอดให้นานกว่านี้ 🙄' },
-  };
-  const r = R[type]||R.quit;
+  const R = VOICES[cfg.voice].results;
+  const r = R[type] || R.quit;
   document.getElementById('res-icon').textContent  = r.icon;
   document.getElementById('res-title').textContent = r.title;
   document.getElementById('res-msg').textContent   = r.msg;
